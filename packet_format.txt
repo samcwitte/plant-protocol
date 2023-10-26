@@ -1,4 +1,3 @@
 Client ID | Destination IP Address | Packet ID (for ACK) | Data Length | Data Payload
 ----------|------------------------|---------------------|-------------|--------------
 4 bytes   | 4 bytes                | 4 bytes             | 4 bytes     | variable
-
