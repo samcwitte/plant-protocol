@@ -1,2 +1,22 @@
 # Plant Protocol
 Client-server project for ECE:3540 Communication Networks.
+
+### To-Do:
+- [ ] Server program file(s)
+    - [ ] Set up base connection between server and client 
+    - [ ] Create database (probably a JSON file)
+    - [ ] send data to client
+    - [ ] receive data from client and write to database
+- [ ] Client program file(s)
+    - [ ] Set up base connection between client and server
+    - [ ] send data to server
+    - [ ] receive data from server
+    - [ ] make changes accordingly
+    - [ ] User Interface
+- [ ] Protocol Documentation
+    - [ ] (5 pts) General introduction for the designed protocol. Should mention whether it uses TCP or UDP as the transport layer service and why.
+    - [ ] (10 pts) Header fields should be included in message formatting. Explicitly list the formatting for the server, client, and handshaking process if they use different formats. Explain each field in the message format.
+    - [ ] Application Layer handshaking process (NOTE: This is NOT the TCP handshaking)
+    - [ ] How this protocol works after hand-shaking process. Use both description and figures to help readers to understand the process. Note: A good protocol should handle all unexpected/imperfect situations. For example, what happens after receiving a packet with the wrong format? Any mechanism to check/avoid corrupted packets? etc.
+- [ ] README file
+    - [ ] should thoroughly explain how to run both the client and the server
