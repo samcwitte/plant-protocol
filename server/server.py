@@ -1,4 +1,10 @@
 import socket
+import os, sys
+
+root_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_folder)
+
+from lib import packets
 
 HOST = "127.0.0.1"
 PORT = 65432 # Most ports 1023 - 65535 should work.
@@ -22,4 +28,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
             if not data:
                 break
             # Send the received data back to the client (echo).
+            # Send ACK here instead of full packet?
             conn.sendall(data)
