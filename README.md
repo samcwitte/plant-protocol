@@ -10,9 +10,9 @@ Client-server project for ECE:3540 Communication Networks.
 ### To-Do:
 - [ ] Server program file(s)
     - [x] Set up base connection between server and client 
-    - [ ] Create database (probably a JSON file)
+    - [x] Create database (probably a JSON file)
     - [ ] send data to client
-    - [ ] receive data from client and write to database
+    - [x] receive data from client and write to database
 - [ ] Client program file(s)
     - [x] Set up base connection between client and server
     - [ ] send data to server

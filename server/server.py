@@ -1,6 +1,8 @@
 import socket
 import os, sys
 
+import json
+
 root_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_folder)
 
@@ -20,6 +22,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
     # Use the new socket (conn) to communicate with the connected client.
     with conn:
         print(f"Connected by {addr}")
+        # get the database
+        database = []
         # Keep receiving data from the client until it disconnects.
         while True:
             # Receive up to 1024 bytes of data from the client.
@@ -28,5 +32,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
             if not data:
                 break
             # Send the received data back to the client (echo).
-            # Send ACK here instead of full packet?
+            # Send ACK here instead of full packet? yes. ACK packet_id
             conn.sendall(data)
+            # format the data
+            formatted_data = str(data.decode('utf-8')).split("\n")
+            # create a dictionary for each client
+            for clientData in formatted_data:
+                # clients info
+                client_id = clientData[0:8]
+                ip = clientData[8:16]
+                packet_id = clientData[16:24]
+                data = clientData[32:]
+                # create a dictionary to send to the database
+                data_dict = {"client_id": client_id, "ip": ip, "packet_id": packet_id, "data": data}
+                database.append(data_dict)
+
+            with open('database/database.json', 'a') as json_file:
+                json.dump(database, json_file, indent=4)
+            # update database with the newly recieved data

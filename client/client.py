@@ -20,7 +20,7 @@ test_packets = [test_packet_a, test_packet_b, test_packet_c, test_packet_d]
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Establish a connection to the specified server (HOST and PORT).
     s.connect((HOST, PORT))
-    # Send a byte-string message "Hello, world" to the server.
+    # Send a byte-string message "Hello, world" to the server. (legacy comment)
     for test_packet in test_packets:
         s.sendall(test_packet.toBytes())
     # Wait for a response from the server and receive up to 1024 bytes of data.
