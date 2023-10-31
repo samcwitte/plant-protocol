@@ -24,6 +24,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         print(f"Connected by {addr}")
         # get the database
         database = []
+        with open('database/database.json', 'r') as file:
+            database = json.load(file)
         # Keep receiving data from the client until it disconnects.
         while True:
             # Receive up to 1024 bytes of data from the client.
@@ -45,8 +47,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
                 data = clientData[32:]
                 # create a dictionary to send to the database
                 data_dict = {"client_id": client_id, "ip": ip, "packet_id": packet_id, "data": data}
-                database.append(data_dict)
+                # search database for changes
+                for client in database:
+                    # find the client
+                    if client["client_id"] == client_id:
+                        # check to see if there are changes
+                        client["ip"] = ip if ip != client["ip"] else client["ip"]
+                        client["packet_id"] = packet_id if packet_id != client["packet_id"] else client["packet_id"]
 
+            # update database with the newly recieved data
             with open('database/database.json', 'a') as json_file:
                 json.dump(database, json_file, indent=4)
-            # update database with the newly recieved data
+            

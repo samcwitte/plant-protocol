@@ -1,0 +1,33 @@
+[
+    {
+        "client_id": "00000004",
+        "ip": "7f000001",
+        "packet_id": "00000005",
+        "data": "update_water(16)"
+    },
+    {
+        "client_id": "00000004",
+        "ip": "7f000001",
+        "packet_id": "00000006",
+        "data": "update_food(5)"
+    },
+    {
+        "client_id": "00000004",
+        "ip": "7f000001",
+        "packet_id": "00000007",
+        "data": "user_theme(\"dark\")"
+    },
+    {
+        "client_id": "00000004",
+        "ip": "7f000001",
+        "packet_id": "00000008",
+        "data": "user_add_plant(USER_ID, PLANT_NAME, COST)"
+    },
+    {
+        "client_id": "",
+        "ip": "",
+        "packet_id": "",
+        "data": ""
+    }
+]
+
