@@ -1,3 +1,9 @@
+# Handshake codes:
+# ICON: Initial CONnection
+# RACK: ACKnowledge received Request
+# PACK: ACKnowledge received Payload
+# DONE: last message before disconnect
+
 import socket
 import os, sys
 
@@ -27,34 +33,24 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         with open('database/database.json', 'r') as file:
             database = json.load(file)
         # Keep receiving data from the client until it disconnects.
+        data = conn.recv(1024)
+        conn.sendall("ICON".toBytes())
+        
+        # Loop here waiting for data
         while True:
             # Receive up to 1024 bytes of data from the client.
             data = conn.recv(1024)
-            # If no data was received, the client has disconnected.
+            # If no data was received, the client is idle.
             if not data:
                 break
-            # Send the received data back to the client (echo).
-            # Send ACK here instead of full packet? yes. ACK packet_id
-            conn.sendall(data)
+            
+            # Send ACK here instead of full packet
+            conn.sendall("DONE")
             # format the data
             formatted_data = str(data.decode('utf-8')).split("\n")
             # create a dictionary for each client
-            for clientData in formatted_data:
-                # clients info
-                client_id = clientData[0:8]
-                ip = clientData[8:16]
-                packet_id = clientData[16:24]
-                data = clientData[32:]
-                # create a dictionary to send to the database
-                data_dict = {"client_id": client_id, "ip": ip, "packet_id": packet_id, "data": data}
-                # search database for changes
-                for client in database:
-                    # find the client
-                    if client["client_id"] == client_id:
-                        # check to see if there are changes
-                        client["ip"] = ip if ip != client["ip"] else client["ip"]
-                        client["packet_id"] = packet_id if packet_id != client["packet_id"] else client["packet_id"]
-
+            
+                
             # update database with the newly recieved data
             with open('database/database.json', 'a') as json_file:
                 json.dump(database, json_file, indent=4)

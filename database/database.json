@@ -1,33 +1,42 @@
-[
-    {
-        "client_id": "00000004",
-        "ip": "7f000001",
-        "packet_id": "00000005",
-        "data": "update_water(16)"
-    },
-    {
-        "client_id": "00000004",
-        "ip": "7f000001",
-        "packet_id": "00000006",
-        "data": "update_food(5)"
-    },
-    {
-        "client_id": "00000004",
-        "ip": "7f000001",
-        "packet_id": "00000007",
-        "data": "user_theme(\"dark\")"
-    },
-    {
-        "client_id": "00000004",
-        "ip": "7f000001",
-        "packet_id": "00000008",
-        "data": "user_add_plant(USER_ID, PLANT_NAME, COST)"
-    },
-    {
-        "client_id": "",
-        "ip": "",
-        "packet_id": "",
-        "data": ""
-    }
-]
-
+{
+    "plants": [
+        {
+            "nickname": "Nickname",
+            "realname": "Genus species",
+            "birthday": 0.0,
+            "water": 0.0,
+            "water_decay_rate": 1.0,
+            "last_water": 0.0,
+            "food": 0.0,
+            "food_decay_rate": 1.0,
+            "last_feed": 0.0,
+            "xp": 0,
+            "money_rate": 10
+        }
+    ],
+    "users": [
+        {
+            "client_id": "00000000",
+            "username": "dev_test",
+            "ip": "7f000001",
+            "user_data": {
+                "balance": 0.0,
+                "plants": [
+                    {
+                        "nickname": "Default Plant",
+                        "realname": "Genus species",
+                        "birthday": 1698890452.0,
+                        "water": 0.0,
+                        "water_decay_rate": 1.0,
+                        "last_water": 1698890452.0,
+                        "food": 0.0,
+                        "food_decay_rate": 1.0,
+                        "last_feed": 1698890452.0,
+                        "xp": 0,
+                        "money_rate": 10
+                    }
+                ]
+            }
+        }
+    ]
+}
