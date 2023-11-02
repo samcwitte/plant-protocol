@@ -17,6 +17,7 @@ from lib import packets
 HOST = "127.0.0.1"
 PORT = 65432 # Most ports 1023 - 65535 should work.
 
+os.system("cls") # clears the console
 # Create a new socket using IPv4 (AF_INET) and TCP protocol (SOCK_STREAM).
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
     # Bind the socket to the specified HOST and PORT.
@@ -34,8 +35,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
             database = json.load(file)
         # Keep receiving data from the client until it disconnects.
         data = conn.recv(1024)
-        conn.sendall("ICON".toBytes())
-        
+        conn.sendall("ICON".encode('utf-8'))
         # Loop here waiting for data
         while True:
             # Receive up to 1024 bytes of data from the client.
