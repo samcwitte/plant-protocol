@@ -101,8 +101,14 @@ arrow_prev_image = pygame.transform.flip(arrow_prev_image, 1, 0)
 arrow_prev_rect = arrow_prev_image.get_rect()
 arrow_prev_rect.center = (center_x - (SCREEN_WIDTH//2) + (6 * SCALE_FACTOR), center_y)
 
+banner_image = pygame.image.load(os.path.join('assets', 'banner.png')).convert_alpha()
+banner_image = pygame.transform.scale(banner_image, (banner_image.get_width() * SCALE_FACTOR, banner_image.get_height() * SCALE_FACTOR))
+banner_rect = banner_image.get_rect()
+banner_rect.center = (center_x, banner_image.get_height()//2)
+
+
+# Main game loop
 while running:
-    # poll for events
     # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -125,13 +131,12 @@ while running:
             
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                print("> Left click!")
                 mouse_pos = event.pos
                 # Check if mouse position is over the sprite
                 if arrow_next_rect.collidepoint(mouse_pos):
-                    print("> Next arrow clicked!")
+                    print("> Next arrow left-clicked!")
                 if arrow_prev_rect.collidepoint(mouse_pos):
-                    print("> Prev arrow clicked!")
+                    print("> Prev arrow left-clicked!")
                 
             if event.button == 3:
                 print("> Right click!")
@@ -145,6 +150,10 @@ while running:
     screen.blit(pot_shadow_image, pot_shadow_rect)
     screen.blit(pot_image, pot_rect)
     screen.blit(plant_image, plant_rect)
+    
+    # Banner section
+    screen.blit(banner_image, banner_rect)
+    # screen.blit(currency_image, currency_rect)
     
     screen.blit(arrow_next_image, arrow_next_rect)
     screen.blit(arrow_prev_image, arrow_prev_rect)
