@@ -136,8 +136,6 @@ settings_rect = settings_image.get_rect()
 settings_rect.center = (SCREEN_WIDTH - sunshine_rect.left // 2, top_banner_rect.centery)
 
 
-
-
 # TODO CHANGE ME TO UPDATE FROM SERVER'S VALUE
 user_balance = 129.43
 balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
@@ -208,9 +206,11 @@ while running:
     screen.blit(shop_image, shop_rect)
     screen.blit(settings_image, settings_rect)
     
+    # Plant stats icons
     screen.blit(water_image, water_rect)
     screen.blit(food_image, food_rect)
     
+    # Next/Prev plant arrows
     screen.blit(arrow_next_image, arrow_next_rect)
     screen.blit(arrow_prev_image, arrow_prev_rect)
 
