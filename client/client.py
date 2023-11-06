@@ -90,6 +90,17 @@ greenhouse_image = pygame.transform.scale(greenhouse_image, (greenhouse_image.ge
 greenhouse_rect = greenhouse_image.get_rect()
 greenhouse_rect.center = (center_x, center_y)
 
+arrow_next_image = pygame.image.load(os.path.join('assets', 'arrow-next.png')).convert_alpha()
+arrow_next_image = pygame.transform.scale(arrow_next_image, (arrow_next_image.get_width() * SCALE_FACTOR, arrow_next_image.get_height() * SCALE_FACTOR))
+arrow_next_rect = arrow_next_image.get_rect()
+arrow_next_rect.center = (center_x + (SCREEN_WIDTH//2) - (6 * SCALE_FACTOR), center_y)
+
+arrow_prev_image = pygame.image.load(os.path.join('assets', 'arrow-next.png')).convert_alpha()
+arrow_prev_image = pygame.transform.scale(arrow_prev_image, (arrow_prev_image.get_width() * SCALE_FACTOR, arrow_prev_image.get_height() * SCALE_FACTOR))
+arrow_prev_image = pygame.transform.flip(arrow_prev_image, 1, 0)
+arrow_prev_rect = arrow_prev_image.get_rect()
+arrow_prev_rect.center = (center_x - (SCREEN_WIDTH//2) + (6 * SCALE_FACTOR), center_y)
+
 while running:
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -111,15 +122,32 @@ while running:
             # Update the rect to match the new image
             plant_rect.center = (center_x, center_y)
             plant_rect.bottom = pot_rect.centery - (10 * SCALE_FACTOR)
+            
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                print("> Left click!")
+                mouse_pos = event.pos
+                # Check if mouse position is over the sprite
+                if arrow_next_rect.collidepoint(mouse_pos):
+                    print("> Next arrow clicked!")
+                if arrow_prev_rect.collidepoint(mouse_pos):
+                    print("> Prev arrow clicked!")
+                
+            if event.button == 3:
+                print("> Right click!")
 
 
     # fill the screen with a color to wipe away anything from last frame
+    # draws from back to front
     screen.fill(pygame.color.Color(132, 197, 255, 255))
     screen.blit(greenhouse_image, greenhouse_rect)
     screen.blit(table_image, table_rect)
     screen.blit(pot_shadow_image, pot_shadow_rect)
     screen.blit(pot_image, pot_rect)
     screen.blit(plant_image, plant_rect)
+    
+    screen.blit(arrow_next_image, arrow_next_rect)
+    screen.blit(arrow_prev_image, arrow_prev_rect)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
