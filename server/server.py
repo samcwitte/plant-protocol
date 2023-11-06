@@ -8,11 +8,11 @@ import socket
 import os, sys
 
 import json
-
 root_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_folder)
 
 from lib import packets
+from lib.database import Database
 
 HOST = "127.0.0.1"
 PORT = 65432 # Most ports 1023 - 65535 should work.
@@ -28,6 +28,35 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
     conn, addr = server.accept()
     # Use the new socket (conn) to communicate with the connected client.
     with conn:
+
+        ######### DATABASE TEST #########
+
+        # getter test
+        db = Database()
+        users = db.getUsers()
+        plants = db.getPlants()
+
+        client_id = db.getClientId("dev")
+
+        userData = db.getUserData(client_id)
+        balance = db.getBalance(client_id)
+        userPlants = db.getUserPlants(client_id)
+        singleUserPlant = db.getSingleUserPlant(client_id, "")
+
+        print(f"Users: \n{users}\n")
+        print(f"Plants: \n{plants}\n\n")
+
+        print(f"Client ID: \n{client_id}\n\n")
+
+        print(f"User Data: \n{userData}\n\n")
+        print(f"Balance: \n{balance}\n\n")
+        print(f"User Plants: \n{userPlants}\n\n")
+        print(f"Single User Plant: \n{singleUserPlant}\n\n")
+        # end getter test
+
+
+        ######### END DATABASE TEST #########
+
         print(f"Connected by {addr}")
         # get the database
         database = []
@@ -40,6 +69,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         while True:
             # Receive up to 1024 bytes of data from the client.
             data = conn.recv(1024)
+            
             # If no data was received, the client is idle.
             if not data:
                 break
