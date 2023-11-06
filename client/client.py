@@ -106,22 +106,38 @@ banner_image = pygame.transform.scale(banner_image, (banner_image.get_width() * 
 banner_rect = banner_image.get_rect()
 banner_rect.center = (center_x, banner_image.get_height()//2)
 
+sunshine_image = pygame.image.load(os.path.join('assets', 'money-icon.png')).convert_alpha()
+sunshine_image = pygame.transform.scale(sunshine_image, (sunshine_image.get_width() * SCALE_FACTOR * 0.75, sunshine_image.get_height() * SCALE_FACTOR * 0.75))
+sunshine_rect = sunshine_image.get_rect()
+sunshine_rect.center = (banner_rect.centerx - (0.2*SCREEN_WIDTH), banner_rect.centery)
+
+water_image = pygame.image.load(os.path.join('assets', 'water-icon.png')).convert_alpha()
+water_image = pygame.transform.scale(water_image, (water_image.get_width() * SCALE_FACTOR / 2, water_image.get_height() * SCALE_FACTOR / 2))
+water_rect = water_image.get_rect()
+water_rect.center = (0.07 * SCREEN_WIDTH, banner_rect.bottom + 25)
+
+food_image = pygame.image.load(os.path.join('assets', 'food-icon.png')).convert_alpha()
+food_image = pygame.transform.scale(food_image, (food_image.get_width() * SCALE_FACTOR / 2, food_image.get_height() * SCALE_FACTOR / 2))
+food_rect = food_image.get_rect()
+food_rect.center = (water_rect.centerx, water_rect.centery + 30)
+
+
 
 # Main game loop
 while running:
-    # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
-                # Load the new plant image (make sure this file exists)
                 stage_num += 1
                 if stage_num > 5: stage_num = 1
             if event.key == pygame.K_LEFT:
                 stage_num -= 1
                 if stage_num < 1: stage_num = 5
+
+            # new_plant_image_path = os.path.join('assets', 'dracaena-sanderiana', 'stage' + str(stage_num) + '.png')
             new_plant_image_path = os.path.join('assets', 'myrtillocactus-geometrizans', 'stage' + str(stage_num) + '.png')
             plant_image = pygame.image.load(new_plant_image_path).convert_alpha()
             plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
@@ -135,8 +151,10 @@ while running:
                 # Check if mouse position is over the sprite
                 if arrow_next_rect.collidepoint(mouse_pos):
                     print("> Next arrow left-clicked!")
+                    # TODO: cycle through user plants here
                 if arrow_prev_rect.collidepoint(mouse_pos):
                     print("> Prev arrow left-clicked!")
+                    # TODO: reverse cycle through user plants here
                 
             if event.button == 3:
                 print("> Right click!")
@@ -153,7 +171,9 @@ while running:
     
     # Banner section
     screen.blit(banner_image, banner_rect)
-    # screen.blit(currency_image, currency_rect)
+    screen.blit(sunshine_image, sunshine_rect)
+    screen.blit(water_image, water_rect)
+    screen.blit(food_image, food_rect)
     
     screen.blit(arrow_next_image, arrow_next_rect)
     screen.blit(arrow_prev_image, arrow_prev_rect)
@@ -161,6 +181,6 @@ while running:
     # flip() the display to put your work on screen
     pygame.display.flip()
 
-    clock.tick(60)  # limits FPS to 60
+    clock.tick(60) # limits FPS to 60
 
 pygame.quit()
