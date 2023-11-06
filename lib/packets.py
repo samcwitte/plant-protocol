@@ -1,3 +1,4 @@
+import time
 class IP_Addr:
     def __init__(self, ip_address):
         self.ip = ip_address.split(".") # i.e. ['127', '0', '0', '12']
@@ -16,29 +17,18 @@ class IP_Addr:
         return ip_string
 
 class Packet:
-    def __init__(self, client_id, dest_ip, packet_id, data):
-        self.client_id = client_id
-        self.dest_ip = IP_Addr(dest_ip)
-        self.packet_id = packet_id
+    def __init__(self, packet_flag_type, data):
+        self.protocol_version = "0.2.0"
+        self.timestamp = time.time()
+        self.packet_flag_type = packet_flag_type
+        self.client_id = int(data['client_id'])
         self.data_length = len(data)
         self.data = data
             
     def toBytes(self):
         # Converts data into a bytestring format for transmission between client and server
-        byteString = '{:08x}'.format(self.client_id) + \
-                     self.dest_ip.toHex() + \
+        byteString = self.dest_ip.toHex() + \
                      '{:08x}'.format(self.packet_id) + \
                      '{:08x}'.format(self.data_length) + \
                      str(self.data) + "\n"
         return bytes(byteString, 'utf-8')
-
-    def summary(packet):
-        # Prints the packet (packet needs to be in bytestring form)
-        client_id = packet[0:8]
-        ip = packet[8:16] # IP Address is 4 bytes, which is 8 hex digits
-        packet_id = packet[16:24]
-        data_length = int(packet[24:32],16)
-        data = packet[32:(32 + data_length)]
-        
-        print()
-        print("Packet " + str(int(packet_id,16)) + " from client " + str(int(client_id, 16)) + " from IP (" + IP_Addr.stringify(ip) + ") contains data:\n" + data)
