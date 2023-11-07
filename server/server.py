@@ -12,7 +12,7 @@ root_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_folder)
 
 from lib import packets
-from lib.database import Database
+from lib import database
 
 HOST = "127.0.0.1"
 PORT = 65432 # Most ports 1023 - 65535 should work.
@@ -32,7 +32,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         ######### DATABASE TEST #########
 
         # getter test
-        db = Database()
+        db = database.Database()
         users = db.getUsers()
         plants = db.getPlants()
 
