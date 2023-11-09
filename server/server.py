@@ -1,7 +1,10 @@
 # Handshake codes:
 # ICON: Initial CONnection
-# RACK: ACKnowledge received Request
+# REQD: REQuest Data
 # PACK: ACKnowledge received Payload
+
+# Potential, but haven't used in code yet:
+# RACK: ACKnowledge received Request
 # DONE: last message before disconnect
 
 import socket
@@ -32,21 +35,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         conn, addr = server.accept()
         # Use the new socket (conn) to communicate with the connected client.
         with conn:
-
-            print(f"Connected by {addr}")
+            # print(f"Connected by {addr}")
             
-            # Keep receiving data from the client until it disconnects.
-            packet = conn.recv(256) # receives ICON
-            print("Packet: " + str(packet))
-            
-            # Check that the first packet received is an ICON packet.
-            decoded_packet = packets.Packet.fromBytes(packet)
-            if (decoded_packet[2] == "ICON"):
-                conn.sendall(packet)
-            else:
-                conn.sendall("huh".encode('utf-8'))
-                print("Packet is not an ICON packet.")
+            # 1) Wait for and receive ICON
+            packet = conn.recv(256)
+            if packet: # makes sure the packet isn't empty
+                print("Packet: " + str(packet))
                 
+                # 2, 3) Check that the first packet received is an ICON packet.
+                decoded_packet = packets.Packet.fromBytes(packet)
+                if (decoded_packet[2] == "ICON"):
+                    conn.sendall(packet)
+                else:
+                    WHAT = packets.Packet("WHAT", "", "")
+                    conn.sendall(packets.Packet.toBytes(WHAT))
+                    print("Packet received from client was not an ICON packet.")
             
         # Loop here waiting for data
         while False:
