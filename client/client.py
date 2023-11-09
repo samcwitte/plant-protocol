@@ -9,29 +9,69 @@ sys.path.append(root_folder)
 
 from lib import packets
 
-HOST = "127.0.0.1"
 PORT = 65432 # This needs to match the server's port.
 
 os.system("cls")
 
+#IP Handling
+print("Input IP to connect to (leave blank for localhost)")
+ip_addr = input("> ")
+if not ip_addr:
+    ip_addr = "127.0.0.1"
+
 # Username handling
-username = input("Username: ")
-if (len(username) >= 16 or len(username) <= 3):
+print("Username (must be between 3 and 16 characters long)")
+username = input("> ")
+if (len(username) > 16 or len(username) < 3):
     print("Username must be between 3 and 16 characters.")
     quit()
 
 # Create a new socket using IPv4 (AF_INET) and TCP protocol (SOCK_STREAM).
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Establish a connection to the specified server (HOST and PORT).
-    s.connect((HOST, PORT))
+    s.connect((ip_addr, PORT))
     
-    # Send a byte-string message "ICON" to the server.
+    # 1) Send a byte-string message "ICON" to the server.
     ICON = packets.Packet("ICON", username, "")
-    ICON_bytes = packets.Packet.toBytes(ICON) # *pac-man noises*
-    s.sendall(ICON_bytes)
+    s.sendall(packets.Packet.toBytes(ICON))
     
-    # Wait for "ICON" response from the server and receive up to 1024 bytes of data.
-    data = s.recv(1024) ############################ how can we check if anything was recieved ##############################
+    # 2) Wait for "ICON" response from the server and receive up to 1024 bytes of data.
+    packet = s.recv(1024)
+    if packet:
+        print("Packet: " + str(packet))
+                
+        # 3) Check that the first packet received is an ICON packet.
+        decoded_packet = packets.Packet.fromBytes(packet)
+        if (decoded_packet[2] == "ICON"):
+            s.sendall(packet)
+        else:
+            WHAT = packets.Packet("WHAT", "", "")
+            s.sendall(packets.Packet.toBytes(WHAT))
+            print("Packet received from sever was not an ICON packet.")
+    
+    # 4) Send data request packet
+    data_request = packets.Packet("REQD", username, "")
+    s.sendall(packets.Packet.toBytes(data_request))
+    
+    # 5) Wait for server response
+    packet = s.recv(2048)
+    if packet:
+        print("Packet: " + str(packet))
+        
+        decoded_packet = packets.Packet.fromBytes(packet)
+        if decoded_packet[2] == "DATA":
+            # Constructs Payload ACK packet and sends it
+            ack_packet = packets.Packet("PACK", username, "")
+            s.sendall(packets.Packet.toBytes(ack_packet))
+            
+            # put JSON fuckery here
+        
+        else:
+            WHAT = packets.Packet("WHAT", "", "")
+            s.sendall(packets.Packet.toBytes(WHAT))
+            print("Packet received from sever was not an ICON packet.")
+    
+    
 
 # Print the data received from the server.
 #formatted_data = str(data.decode('utf-8')).split("\n")
