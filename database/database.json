@@ -62,21 +62,6 @@
         },
         {
             "nickname": "Name me!",
-            "realname": "String of Pearls",
-            "sciname": "Curio rowleyanus",
-            "picture_path": "curio-rowleyanus",
-            "birthday": 0.0,
-            "water": 0.0,
-            "water_decay_rate": 1.0,
-            "last_water": 0.0,
-            "food": 0.0,
-            "food_decay_rate": 1.0,
-            "last_feed": 0.0,
-            "xp": 0,
-            "money_rate": 10
-        },
-        {
-            "nickname": "Name me!",
             "realname": "Blue Myrtle Cactus",
             "sciname": "Myrtillocactus geometrizans",
             "picture_path": "myrtillocactus-geometrizans",
