@@ -12,12 +12,24 @@ from lib import packets
 HOST = "127.0.0.1"
 PORT = 65432 # This needs to match the server's port.
 
+os.system("cls")
+
+# Username handling
+username = input("Username: ")
+if (len(username) >= 16 or len(username) <= 3):
+    print("Username must be between 3 and 16 characters.")
+    quit()
+
 # Create a new socket using IPv4 (AF_INET) and TCP protocol (SOCK_STREAM).
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Establish a connection to the specified server (HOST and PORT).
     s.connect((HOST, PORT))
+    
     # Send a byte-string message "ICON" to the server.
-    s.sendall("ICON".encode('utf-8'))
+    ICON = packets.Packet("ICON", username, "")
+    ICON_bytes = packets.Packet.toBytes(ICON) # *pac-man noises*
+    s.sendall(ICON_bytes)
+    
     # Wait for "ICON" response from the server and receive up to 1024 bytes of data.
     data = s.recv(1024) ############################ how can we check if anything was recieved ##############################
 
