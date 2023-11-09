@@ -2,7 +2,7 @@ import time
 
 class Packet:
     def __init__(self, packet_flag_type, username, data):
-        self.protocol_version = "0.2.0" # 5
+        self.protocol_version = "1.0.1" # 5
         self.timestamp = time.time_ns() // 1_000_000_000    # 18
         self.packet_flag_type = packet_flag_type
         self.username = username
