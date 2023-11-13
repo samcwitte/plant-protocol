@@ -3,6 +3,7 @@ import os, sys
 import pygame
 import time
 import json
+import random
 
 root_folder = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_folder)
@@ -10,6 +11,18 @@ sys.path.append(root_folder)
 from lib import packets
 
 PORT = 65432 # This needs to match the server's port.
+
+def getNewPlant(plants_list_from_database):
+    # TODO We have two options here:
+    # send REQD to server and get plant data back, then pick random number from those, OR
+    # pick random number, then send REQD for just the plant at that index
+    
+    newPlant = plants_list_from_database[random.randint(0,3)] # random.randint(0, maxPlantIndexFromServerDatabase)
+    
+    # Turns py dict into json object
+    json.dumps(newPlant)
+    
+    return
 
 os.system("cls")
 
@@ -195,13 +208,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # TODO CHANGE ME TO UPDATE FROM SERVER'S VALUE
     time_elapsed = 0
     user_balance = int(gamedata['balance'])
+    user_plants = gamedata['plants']
+    active_plant_index = 0
     balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
 
     # Main game loop
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                # Wait for "ICON" response from the server and receive up to 1024 bytes of data.
+                # Set gamedata variable here to send back to server
+                gamedata['balance'] = user_balance
+                gamedata['plants'] = user_plants
+                
                 while True:
                     try:
                         DATA = packets.Packet("DATA", username, json.dumps(gamedata))
@@ -227,8 +245,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 DONE = packets.Packet("DONE", username, "")
                 s.sendall(packets.Packet.toBytes(DONE))
                 print("SEND | DONE")
-                # time.sleep(1)
-                # time.sleep(1)
                 running = False
 
             if event.type == pygame.KEYDOWN:
@@ -247,7 +263,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         stage_num = 1
                 
                 # new_plant_image_path = os.path.join('assets', 'dracaena-sanderiana', 'stage' + str(stage_num) + '.png')
-                new_plant_image_path = os.path.join('assets', 'sprites', 'myrtillocactus-geometrizans', 'stage' + str(stage_num) + '.png')
+                new_plant_image_path = os.path.join('assets', 'sprites', gamedata['plants'][active_plant_index]['picture_path'], 'stage' + str(stage_num) + '.png')
                 plant_image = pygame.image.load(new_plant_image_path).convert_alpha()
                 plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
                 # Update the rect to match the new image
@@ -285,7 +301,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         if (time_elapsed >= 500):
             user_balance += money_rate # TODO CHANGE ME
             time_elapsed = 0
-        
         
         # fill the screen with a color to wipe away anything from last frame
         # draws from back to front
