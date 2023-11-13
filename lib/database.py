@@ -36,34 +36,34 @@ class Database:
         return None
 
     # return user data... used in other getters
-    def getUserData(self, client_id):
+    def getUserData(self, username):
         # load in the database
         with open(self.database_file, 'r') as file:
             data = json.load(file)
 
         for user in data['users']:
-            if user['client_id'] == client_id:
+            if user['username'] == username:
                 return user['user_data']
 
         return None
 
     # get user money balance
-    def getBalance(self, client_id):
-        user_data = self.getUserData(client_id)
+    def getBalance(self, username):
+        user_data = self.getUserData(username)
         if user_data:
             return user_data.get('balance', None)
         return None
     
     # get user plants
-    def getUserPlants(self, client_id):
-        user_data = self.getUserData(client_id)
+    def getUserPlants(self, username):
+        user_data = self.getUserData(username)
         if user_data:
             return user_data["plants"]
         return []
 
     # get one of the users plants
-    def getSingleUserPlant(self, client_id, scientific_name):
-        plants = self.getUserPlants(client_id)
+    def getSingleUserPlant(self, username, scientific_name):
+        plants = self.getUserPlants(username)
         for plant in plants:
             if plant["sciname"] == scientific_name:
                 return plant
