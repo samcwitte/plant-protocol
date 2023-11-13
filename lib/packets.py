@@ -16,13 +16,13 @@ class Packet:
                       bytes((self.username.ljust(16, '\x00').encode('utf-8'))) + \
                       bytes((self.data).encode('utf-8'))
         
-        print(str(byteString))
+        # print(str(byteString))
         return byteString
     
     def fromBytes(byteString):
         # Extract components based on the specified format
         hexString = byteString.decode('utf-8')
-        print(hexString)
+        # print(hexString)
         # 0.2.01699498899ICONtimmy
     # Extract components based on the specified format
         protocol_version = hexString[0:5]
@@ -31,10 +31,10 @@ class Packet:
         username = hexString[19:35]
         data = hexString[35:]
 
-        print(f'Protocol Version: {protocol_version}')
-        print(f'Timestamp: {timestamp}')
-        print(f'ctime: {time.ctime(timestamp)}')
-        print(f'Packet Flag Type: {packet_flag_type}')
-        print(f'Username: {username}')
-        print(f'Data: {data}')
+        # print(f'Protocol Version: {protocol_version}')
+        # print(f'Timestamp: {timestamp}')
+        # print(f'ctime: {time.ctime(timestamp)}')
+        # print(f'Packet Flag Type: {packet_flag_type}')
+        # print(f'Username: {username}')
+        # print(f'Data: {data}')
         return protocol_version, timestamp, packet_flag_type, username, data
