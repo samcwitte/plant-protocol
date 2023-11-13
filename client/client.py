@@ -212,14 +212,41 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     active_plant_index = 0
     balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
 
+    # water and food decay
+    water_decay_rate = gamedata['plants'][0]["water_decay_rate"]
+    food_decay_rate = gamedata['plants'][0]["food_decay_rate"]
+
+    # time of last water and feed
+    last_water = gamedata['plants'][0]["last_water"]
+    last_feed = gamedata['plants'][0]["last_feed"]
+
+    # time since last water and feed event
+    time_since_last_water = time.time() - last_water
+    time_since_last_feed = time.time() - last_feed
+
+    # current water and food levels (percentage 0%-100%)
+    water = gamedata['plants'][0]["water"] - (time_since_last_water * water_decay_rate)
+    food = gamedata['plants'][0]["food"] - (time_since_last_feed * food_decay_rate)
+
+    if water < 0: water = 0
+    if food < 0: food = 0
+
     # Main game loop
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 # Set gamedata variable here to send back to server
                 gamedata['balance'] = user_balance
-                gamedata['plants'] = user_plants
+
+                # plant info dump
+                user_plants[0]["food"] = food
+                user_plants[0]["water"] = water
                 
+                user_plants[0]["last_feed"] = time_since_last_feed
+                user_plants[0]["last_water"] = time_since_last_water
+
+                gamedata['plants'] = user_plants
+                                
                 while True:
                     try:
                         DATA = packets.Packet("DATA", username, json.dumps(gamedata))
@@ -250,25 +277,34 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if event.type == pygame.KEYDOWN:
                 match event.key:
                     case pygame.K_1:
-                        stage_num = 1
+                        #stage_num = 1
+                        time_since_last_water = time.time()
+
+                        water += 10
+                        if water > 100: water = 100
                     case pygame.K_2:
-                        stage_num = 2
-                    case pygame.K_3:
-                        stage_num = 3
-                    case pygame.K_4:
-                        stage_num = 4
-                    case pygame.K_5:
-                        stage_num = 5
-                    case _:
-                        stage_num = 1
+                        #stage_num = 2
+                        time_since_last_feed = time.time()
+
+                        food += 10
+                        if food > 100: food = 100
+                    #case pygame.K_3:
+                    #    stage_num = 3
+                    #case pygame.K_4:
+                    #    stage_num = 4
+                    #    
+                    #case pygame.K_5:
+                    #    stage_num = 5    
+                    #case _:
+                    #    stage_num = 1
                 
                 # new_plant_image_path = os.path.join('assets', 'dracaena-sanderiana', 'stage' + str(stage_num) + '.png')
-                new_plant_image_path = os.path.join('assets', 'sprites', gamedata['plants'][active_plant_index]['picture_path'], 'stage' + str(stage_num) + '.png')
-                plant_image = pygame.image.load(new_plant_image_path).convert_alpha()
-                plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
-                # Update the rect to match the new image
-                plant_rect.center = (center_x, center_y)
-                plant_rect.bottom = pot_rect.centery - (10 * SCALE_FACTOR)
+                #new_plant_image_path = os.path.join('assets', 'sprites', gamedata['plants'][active_plant_index]['picture_path'], 'stage' + str(stage_num) + '.png')
+                #plant_image = pygame.image.load(new_plant_image_path).convert_alpha()
+                #plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
+                ## Update the rect to match the new image
+                #plant_rect.center = (center_x, center_y)
+                #plant_rect.bottom = pot_rect.centery - (10 * SCALE_FACTOR)
                 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -298,10 +334,22 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
         
         # Plant money update logic here
-        if (time_elapsed >= 500):
+        if (time_elapsed >= 1000):
+
+            # update user balance
             user_balance += money_rate # TODO CHANGE ME
+
+            # update food and water levels (can change the division for slower or faster rates of decay)
+            food -= int(time_since_last_feed * food_decay_rate)/3
+            water -= int(time_since_last_water * water_decay_rate)/2
+
+            # testing print statements
+            print(f"\n\nFOOD LEVEL | {food}")
+            print(f"WATER LEVEL | {water}")
+
+            # reset elapsed time
             time_elapsed = 0
-        
+
         # fill the screen with a color to wipe away anything from last frame
         # draws from back to front
         screen.fill(pygame.color.Color(132, 197, 255, 255))
