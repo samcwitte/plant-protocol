@@ -12,17 +12,35 @@ from lib import packets
 
 PORT = 65432 # This needs to match the server's port.
 
-def getNewPlant(plants_list_from_database):
-    # TODO We have two options here:
-    # send REQD to server and get plant data back, then pick random number from those, OR
-    # pick random number, then send REQD for just the plant at that index
-    
-    newPlant = plants_list_from_database[random.randint(0,3)] # random.randint(0, maxPlantIndexFromServerDatabase)
-    
-    # Turns py dict into json object
-    json.dumps(newPlant)
-    
-    return
+def getNewPlant():
+    global plants
+    newPlant = plants[random.randint(0,len(plants))]
+    return newPlant
+
+def getPlantLevel():
+    global user_plants, currentPlantIndex
+    plantLevel = (int(user_plants[currentPlantIndex]['xp']) // 10) + 1 # can't be level 0
+    return max(1, min(plantLevel, 5)) # clamps the level between 1 and 5 (incl.)
+
+def nextPlant():
+    global user_plants, currentPlantIndex, plant_image
+    if currentPlantIndex == len(user_plants) - 1: # max index
+        currentPlantIndex = 0
+    else:
+        currentPlantIndex += 1
+    levelString = 'stage' + str(getPlantLevel()) + '.png'
+    plant_image = pygame.image.load(os.path.join('assets', 'sprites', user_plants[currentPlantIndex]['sciname'].lower().replace(' ', '-'), levelString)).convert_alpha()
+    plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
+
+def prevPlant():
+    global user_plants, currentPlantIndex, plant_image
+    if currentPlantIndex == 0: # min index
+        currentPlantIndex = len(user_plants) - 1
+    else:
+        currentPlantIndex -= 1
+    levelString = 'stage' + str(getPlantLevel()) + '.png'
+    plant_image = pygame.image.load(os.path.join('assets', 'sprites', user_plants[currentPlantIndex]['sciname'].lower().replace(' ', '-'), levelString)).convert_alpha()
+    plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
 
 os.system("cls")
 
@@ -75,7 +93,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             continue
     
     # 4) Send data request packet
-    data_request = packets.Packet("REQD", username, "")
+    data_request = packets.Packet("REQD", username, "USER")
     s.sendall(packets.Packet.toBytes(data_request))
     print("SEND | REQD")
     
@@ -109,7 +127,41 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print("ERROR 2: " + str(oops))
             time.sleep(0.1)
             continue
-
+        
+    plant_data_request = packets.Packet("REQD", username, "PLANTS")
+    s.sendall(packets.Packet.toBytes(plant_data_request))
+    print("SEND | REQD")
+    
+    # 5) Wait for server response
+    while True:
+        try:
+            packet = s.recv(2048)
+            if packet:
+                
+                decoded_packet = packets.Packet.fromBytes(packet)
+                if decoded_packet[2] == "DATA":
+                    print("RECV | DATA | " + str(decoded_packet))
+                    
+                    # Set game variables from received data
+                    plants = json.loads(decoded_packet[4]) # might not work
+                    # print(str(gamedata))
+                    
+                    # Constructs Payload ACK packet and sends it
+                    ack_packet = packets.Packet("DACK", "", "")
+                    s.sendall(packets.Packet.toBytes(ack_packet))
+                    print("SEND | DACK")
+                    # put JSON fuckery here
+                
+                else:
+                    WHAT = packets.Packet("WHAT", "", "")
+                    s.sendall(packets.Packet.toBytes(WHAT))
+                    print("SEND | WHAT")
+                break
+                    
+        except socket.error as oops:
+            print("ERROR 3: " + str(oops))
+            time.sleep(0.1)
+            continue
 
 
     ##################################### Pygame setup #####################################
@@ -133,82 +185,83 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     running = True
 
     SCALE_FACTOR = 4
+    
+    user_plants = gamedata['plants']
 
     # NOTE: ALL PLANT SPRITES SHOULD BE 32x32 AND A .PNG FILE
-    pot_image = pygame.image.load(os.path.join('assets', 'sprites', 'pot.png')).convert_alpha()
-    pot_image = pygame.transform.scale(pot_image, (pot_image.get_width() * SCALE_FACTOR, pot_image.get_height() * SCALE_FACTOR))
-    pot_rect = pot_image.get_rect()
-    pot_rect.center = (center_x, center_y)
-    pot_rect.bottom = SCREEN_HEIGHT - pot_image.get_height()/2 + 30
+    if True: # This does nothing. This is so I can minimize the sprites section of code.
+        pot_image = pygame.image.load(os.path.join('assets', 'sprites', 'pot.png')).convert_alpha()
+        pot_image = pygame.transform.scale(pot_image, (pot_image.get_width() * SCALE_FACTOR, pot_image.get_height() * SCALE_FACTOR))
+        pot_rect = pot_image.get_rect()
+        pot_rect.center = (center_x, center_y)
+        pot_rect.bottom = SCREEN_HEIGHT - pot_image.get_height()/2 + 30
 
-    pot_shadow_image = pygame.image.load(os.path.join('assets', 'sprites', 'pot_shadow.png')).convert_alpha()
-    pot_shadow_image = pygame.transform.scale(pot_shadow_image, (pot_shadow_image.get_width() * SCALE_FACTOR, pot_shadow_image.get_height() * SCALE_FACTOR))
-    pot_shadow_rect = pot_shadow_image.get_rect()
-    pot_shadow_rect.center = (pot_rect.centerx + (13 * SCALE_FACTOR), pot_rect.bottom + (1 * SCALE_FACTOR))
+        pot_shadow_image = pygame.image.load(os.path.join('assets', 'sprites', 'pot_shadow.png')).convert_alpha()
+        pot_shadow_image = pygame.transform.scale(pot_shadow_image, (pot_shadow_image.get_width() * SCALE_FACTOR, pot_shadow_image.get_height() * SCALE_FACTOR))
+        pot_shadow_rect = pot_shadow_image.get_rect()
+        pot_shadow_rect.center = (pot_rect.centerx + (13 * SCALE_FACTOR), pot_rect.bottom + (1 * SCALE_FACTOR))
 
-    plant_image = pygame.image.load(os.path.join('assets', 'sprites', 'myrtillocactus-geometrizans', 'stage1.png')).convert_alpha()
-    plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
-    plant_rect = plant_image.get_rect()
-    plant_rect.center = (center_x, center_y)
-    plant_rect.bottom = pot_rect.centery - (10 * SCALE_FACTOR)
+        plant_image = pygame.image.load(os.path.join('assets', 'sprites', user_plants[0]['sciname'].lower().replace(' ', '-'), 'stage1.png')).convert_alpha()
+        plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
+        plant_rect = plant_image.get_rect()
+        plant_rect.center = (center_x, center_y)
+        plant_rect.bottom = pot_rect.centery - (10 * SCALE_FACTOR)
 
-    table_image = pygame.image.load(os.path.join('assets', 'sprites', 'table.png')).convert_alpha()
-    table_image = pygame.transform.scale(table_image, (table_image.get_width() * SCALE_FACTOR, table_image.get_height() * SCALE_FACTOR))
-    table_rect = table_image.get_rect()
-    table_rect.center = (center_x, center_y)
-    table_rect.bottom = SCREEN_HEIGHT
+        table_image = pygame.image.load(os.path.join('assets', 'sprites', 'table.png')).convert_alpha()
+        table_image = pygame.transform.scale(table_image, (table_image.get_width() * SCALE_FACTOR, table_image.get_height() * SCALE_FACTOR))
+        table_rect = table_image.get_rect()
+        table_rect.center = (center_x, center_y)
+        table_rect.bottom = SCREEN_HEIGHT
 
-    greenhouse_image = pygame.image.load(os.path.join('assets', 'sprites', 'greenhouse-background.png')).convert_alpha()
-    greenhouse_image = pygame.transform.scale(greenhouse_image, (greenhouse_image.get_width() * SCALE_FACTOR, greenhouse_image.get_height() * SCALE_FACTOR))
-    greenhouse_rect = greenhouse_image.get_rect()
-    greenhouse_rect.center = (center_x, center_y)
+        greenhouse_image = pygame.image.load(os.path.join('assets', 'sprites', 'greenhouse-background.png')).convert_alpha()
+        greenhouse_image = pygame.transform.scale(greenhouse_image, (greenhouse_image.get_width() * SCALE_FACTOR, greenhouse_image.get_height() * SCALE_FACTOR))
+        greenhouse_rect = greenhouse_image.get_rect()
+        greenhouse_rect.center = (center_x, center_y)
 
-    arrow_next_image = pygame.image.load(os.path.join('assets', 'sprites', 'arrow-next.png')).convert_alpha()
-    arrow_next_image = pygame.transform.scale(arrow_next_image, (arrow_next_image.get_width() * SCALE_FACTOR, arrow_next_image.get_height() * SCALE_FACTOR))
-    arrow_next_rect = arrow_next_image.get_rect()
-    arrow_next_rect.center = (center_x + (SCREEN_WIDTH//2) - (6 * SCALE_FACTOR), center_y)
+        arrow_next_image = pygame.image.load(os.path.join('assets', 'sprites', 'arrow-next.png')).convert_alpha()
+        arrow_next_image = pygame.transform.scale(arrow_next_image, (arrow_next_image.get_width() * SCALE_FACTOR, arrow_next_image.get_height() * SCALE_FACTOR))
+        arrow_next_rect = arrow_next_image.get_rect()
+        arrow_next_rect.center = (center_x + (SCREEN_WIDTH//2) - (6 * SCALE_FACTOR), center_y)
 
-    arrow_prev_image = pygame.image.load(os.path.join('assets', 'sprites', 'arrow-next.png')).convert_alpha()
-    arrow_prev_image = pygame.transform.scale(arrow_prev_image, (arrow_prev_image.get_width() * SCALE_FACTOR, arrow_prev_image.get_height() * SCALE_FACTOR))
-    arrow_prev_image = pygame.transform.flip(arrow_prev_image, 1, 0)
-    arrow_prev_rect = arrow_prev_image.get_rect()
-    arrow_prev_rect.center = (center_x - (SCREEN_WIDTH//2) + (6 * SCALE_FACTOR), center_y)
+        arrow_prev_image = pygame.image.load(os.path.join('assets', 'sprites', 'arrow-next.png')).convert_alpha()
+        arrow_prev_image = pygame.transform.scale(arrow_prev_image, (arrow_prev_image.get_width() * SCALE_FACTOR, arrow_prev_image.get_height() * SCALE_FACTOR))
+        arrow_prev_image = pygame.transform.flip(arrow_prev_image, 1, 0)
+        arrow_prev_rect = arrow_prev_image.get_rect()
+        arrow_prev_rect.center = (center_x - (SCREEN_WIDTH//2) + (6 * SCALE_FACTOR), center_y)
 
-    top_banner_image = pygame.image.load(os.path.join('assets', 'sprites', 'banner.png')).convert_alpha()
-    top_banner_image = pygame.transform.scale(top_banner_image, (top_banner_image.get_width() * SCALE_FACTOR, top_banner_image.get_height() * SCALE_FACTOR))
-    top_banner_rect = top_banner_image.get_rect()
-    top_banner_rect.center = (center_x, top_banner_image.get_height()//2)
+        top_banner_image = pygame.image.load(os.path.join('assets', 'sprites', 'banner.png')).convert_alpha()
+        top_banner_image = pygame.transform.scale(top_banner_image, (top_banner_image.get_width() * SCALE_FACTOR, top_banner_image.get_height() * SCALE_FACTOR))
+        top_banner_rect = top_banner_image.get_rect()
+        top_banner_rect.center = (center_x, top_banner_image.get_height()//2)
 
-    sunshine_image = pygame.image.load(os.path.join('assets', 'sprites', 'money-icon.png')).convert_alpha()
-    sunshine_image = pygame.transform.scale(sunshine_image, (sunshine_image.get_width() * SCALE_FACTOR * 0.75, sunshine_image.get_height() * SCALE_FACTOR * 0.75))
-    sunshine_rect = sunshine_image.get_rect()
-    sunshine_rect.center = (top_banner_rect.centerx - (0.2*SCREEN_WIDTH), top_banner_rect.centery)
+        sunshine_image = pygame.image.load(os.path.join('assets', 'sprites', 'money-icon.png')).convert_alpha()
+        sunshine_image = pygame.transform.scale(sunshine_image, (sunshine_image.get_width() * SCALE_FACTOR * 0.75, sunshine_image.get_height() * SCALE_FACTOR * 0.75))
+        sunshine_rect = sunshine_image.get_rect()
+        sunshine_rect.center = (top_banner_rect.centerx - (0.2*SCREEN_WIDTH), top_banner_rect.centery)
 
-    water_image = pygame.image.load(os.path.join('assets', 'sprites', 'water-icon.png')).convert_alpha()
-    water_image = pygame.transform.scale(water_image, (water_image.get_width() * SCALE_FACTOR / 2, water_image.get_height() * SCALE_FACTOR / 2))
-    water_rect = water_image.get_rect()
-    water_rect.center = (0.07 * SCREEN_WIDTH, top_banner_rect.bottom + 25)
+        water_image = pygame.image.load(os.path.join('assets', 'sprites', 'water-icon.png')).convert_alpha()
+        water_image = pygame.transform.scale(water_image, (water_image.get_width() * SCALE_FACTOR / 2, water_image.get_height() * SCALE_FACTOR / 2))
+        water_rect = water_image.get_rect()
+        water_rect.center = (0.07 * SCREEN_WIDTH, top_banner_rect.bottom + 25)
 
-    food_image = pygame.image.load(os.path.join('assets', 'sprites', 'food-icon.png')).convert_alpha()
-    food_image = pygame.transform.scale(food_image, (food_image.get_width() * SCALE_FACTOR / 2, food_image.get_height() * SCALE_FACTOR / 2))
-    food_rect = food_image.get_rect()
-    food_rect.center = (water_rect.centerx, water_rect.centery + 30)
+        food_image = pygame.image.load(os.path.join('assets', 'sprites', 'food-icon.png')).convert_alpha()
+        food_image = pygame.transform.scale(food_image, (food_image.get_width() * SCALE_FACTOR / 2, food_image.get_height() * SCALE_FACTOR / 2))
+        food_rect = food_image.get_rect()
+        food_rect.center = (water_rect.centerx, water_rect.centery + 30)
 
-    shop_image = pygame.image.load(os.path.join('assets', 'sprites', 'shop-icon.png')).convert_alpha()
-    shop_image = pygame.transform.scale(shop_image, (shop_image.get_width() * SCALE_FACTOR / 2.5, shop_image.get_height() * SCALE_FACTOR / 2.5))
-    shop_rect = shop_image.get_rect()
-    shop_rect.center = (sunshine_rect.left // 2, top_banner_rect.centery)
+        shop_image = pygame.image.load(os.path.join('assets', 'sprites', 'shop-icon.png')).convert_alpha()
+        shop_image = pygame.transform.scale(shop_image, (shop_image.get_width() * SCALE_FACTOR / 2.5, shop_image.get_height() * SCALE_FACTOR / 2.5))
+        shop_rect = shop_image.get_rect()
+        shop_rect.center = (sunshine_rect.left // 2, top_banner_rect.centery)
 
-    settings_image = pygame.image.load(os.path.join('assets', 'sprites', 'settings-icon.png')).convert_alpha()
-    settings_image = pygame.transform.scale(settings_image, (settings_image.get_width() * SCALE_FACTOR / 2.5, settings_image.get_height() * SCALE_FACTOR / 2.5))
-    settings_rect = settings_image.get_rect()
-    settings_rect.center = (SCREEN_WIDTH - sunshine_rect.left // 2, top_banner_rect.centery)
-
+        settings_image = pygame.image.load(os.path.join('assets', 'sprites', 'settings-icon.png')).convert_alpha()
+        settings_image = pygame.transform.scale(settings_image, (settings_image.get_width() * SCALE_FACTOR / 2.5, settings_image.get_height() * SCALE_FACTOR / 2.5))
+        settings_rect = settings_image.get_rect()
+        settings_rect.center = (SCREEN_WIDTH - sunshine_rect.left // 2, top_banner_rect.centery)
 
     # TODO CHANGE ME TO UPDATE FROM SERVER'S VALUE
     time_elapsed = 0
     user_balance = int(gamedata['balance'])
-    user_plants = gamedata['plants']
     active_plant_index = 0
     balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
 
@@ -229,6 +282,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     if water < 0: water = 0
     if food < 0: food = 0
+    
+    currentPlantIndex = 0
 
     # Main game loop
     while running:
@@ -277,14 +332,28 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 match event.key:
                     #case pygame.K_1:
                         #stage_num = 1
+
                     #case pygame.K_2:
-                        #stage_num = 2
+                        #stage_num = 2 
+
                     #case pygame.K_3:
                     #    stage_num = 3
+
                     #case pygame.K_4:
                     #    stage_num = 4
+
                     #case pygame.K_5:
-                    #    stage_num = 5  
+                    #    stage_num = 5 
+
+                    case pygame.K_p:
+                        user_plants.append(getNewPlant())
+                        print("\nUser Plants: " + str(user_plants))
+                        
+                    case pygame.K_x:
+                        user_plants[currentPlantIndex]['xp'] = str(int(user_plants[currentPlantIndex]['xp']) + 5)
+                        nextPlant()
+                        prevPlant()
+
                     case pygame.K_w:
                         # change the last water time
                         last_water = time.time()
@@ -299,10 +368,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         food[0] += 5 # TODO CHANGE TO PLANT NUMBER
                         if food[0] > 100: food[0] = 100  
 
-                    #case _:
-                    #    stage_num = 1
-
-                
                 #new_plant_image_path = os.path.join('assets', 'dracaena-sanderiana', 'stage' + str(stage_num) + '.png')
                 #new_plant_image_path = os.path.join('assets', 'sprites', gamedata['plants'][active_plant_index]['picture_path'], 'stage' + str(stage_num) + '.png')
                 #plant_image = pygame.image.load(new_plant_image_path).convert_alpha()
@@ -317,10 +382,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     # Check if mouse position is over the sprite
                     if arrow_next_rect.collidepoint(mouse_pos):
                         print("> Next arrow left-clicked!")
-                        # TODO: cycle through user plants here
+                        nextPlant()
+                        
                     if arrow_prev_rect.collidepoint(mouse_pos):
                         print("> Prev arrow left-clicked!")
-                        # TODO: reverse cycle through user plants here
+                        prevPlant()
+                        
                     if shop_rect.collidepoint(mouse_pos):
                         print("> Shop left-clicked!")
                         # TODO IMPLEMENT SHOP
