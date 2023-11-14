@@ -52,11 +52,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
                         conn.sendall(packet)
                         print("RECV | ICON | Sending copy back...")
                     elif (decoded_packet[2] == "REQD"):
-                        print("RECV | REQD | Sending data...")
-                        username = decoded_packet[3].replace("\x00", "")
-                        data_packet = packets.Packet("DATA", "SERVER", json.dumps(db.getUserData(username)))
-                        conn.sendall(packets.Packet.toBytes(data_packet))
-                        print("SEND | DATA | " + str(data_packet))
+                        if (decoded_packet[4] == "USER"):
+                            print("RECV | REQD | Sending data...")
+                            username = decoded_packet[3].replace("\x00", "")
+                            data_packet = packets.Packet("DATA", "SERVER", json.dumps(db.getUserData(username)))
+                            conn.sendall(packets.Packet.toBytes(data_packet))
+                            print("SEND | DATA | " + str(data_packet))
+                        if (decoded_packet[4] == "PLANTS"):
+                            print("RECV | REQD | Sending data...")
+                            username = decoded_packet[3].replace("\x00", "")
+                            data_packet = packets.Packet("DATA", "SERVER", json.dumps(db.getPlants()))
+                            conn.sendall(packets.Packet.toBytes(data_packet))
+                            print("SEND | DATA | " + str(data_packet))
                         
                     elif (decoded_packet[2] == "DATA"):
                         index = -1
