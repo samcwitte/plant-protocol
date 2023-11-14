@@ -220,13 +220,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     last_water = gamedata['plants'][0]["last_water"]
     last_feed = gamedata['plants'][0]["last_feed"]
 
-    # time since last water and feed event
-    time_since_last_water = time.time() - last_water
-    time_since_last_feed = time.time() - last_feed
-
     # current water and food levels (percentage 0%-100%)
-    water = gamedata['plants'][0]["water"] - (time_since_last_water * water_decay_rate)
-    food = gamedata['plants'][0]["food"] - (time_since_last_feed * food_decay_rate)
+    water = []
+    food = []
+    for i in range(len(gamedata['plants'])):
+        water[i] = round(gamedata['plants'][i]["water"] - ((time.time() - last_water) * (water_decay_rate/100)), 0)
+        food[i] = round(gamedata['plants'][i]["food"] - ((time.time() - last_feed) * (food_decay_rate/100)), 0)
 
     if water < 0: water = 0
     if food < 0: food = 0
@@ -242,8 +241,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 user_plants[0]["food"] = food
                 user_plants[0]["water"] = water
                 
-                user_plants[0]["last_feed"] = time_since_last_feed
-                user_plants[0]["last_water"] = time_since_last_water
+                user_plants[0]["last_feed"] = last_feed
+                user_plants[0]["last_water"] = last_water
 
                 gamedata['plants'] = user_plants
                                 
@@ -276,29 +275,35 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             if event.type == pygame.KEYDOWN:
                 match event.key:
-                    case pygame.K_1:
+                    #case pygame.K_1:
                         #stage_num = 1
-                        time_since_last_water = time.time()
-
-                        water += 10
-                        if water > 100: water = 100
-                    case pygame.K_2:
+                    #case pygame.K_2:
                         #stage_num = 2
-                        time_since_last_feed = time.time()
-
-                        food += 10
-                        if food > 100: food = 100
                     #case pygame.K_3:
                     #    stage_num = 3
                     #case pygame.K_4:
                     #    stage_num = 4
-                    #    
                     #case pygame.K_5:
-                    #    stage_num = 5    
+                    #    stage_num = 5  
+                    case pygame.K_w:
+                        # change the last water time
+                        last_water = time.time()
+                        # add to the water level, cannot go above 100
+                        water[0] += 10 # TODO CHANGE TO PLANT NUMBER
+                        if water > 100: water = 100
+
+                    case pygame.K_f:
+                        # change the last feed time
+                        last_feed = time.time()
+                        # add to the food level, cannot go above 100
+                        food[0] += 5 # TODO CHANGE TO PLANT NUMBER
+                        if food[0] > 100: food[0] = 100  
+
                     #case _:
                     #    stage_num = 1
+
                 
-                # new_plant_image_path = os.path.join('assets', 'dracaena-sanderiana', 'stage' + str(stage_num) + '.png')
+                #new_plant_image_path = os.path.join('assets', 'dracaena-sanderiana', 'stage' + str(stage_num) + '.png')
                 #new_plant_image_path = os.path.join('assets', 'sprites', gamedata['plants'][active_plant_index]['picture_path'], 'stage' + str(stage_num) + '.png')
                 #plant_image = pygame.image.load(new_plant_image_path).convert_alpha()
                 #plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
@@ -328,7 +333,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     print("> Right click!")
         
         dt = clock.tick(60)
-        money_rate = int(gamedata['plants'][0]['money_rate'])
+        money_rate = int(gamedata['plants'][0]['money_rate']) # TODO CHANGE TO PLANT NUMBER
         # money_rate = sum of all plants' money rates
         
         balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
@@ -339,10 +344,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             # update user balance
             user_balance += money_rate # TODO CHANGE ME
 
-            # update food and water levels (can change the division for slower or faster rates of decay)
-            food -= int(time_since_last_feed * food_decay_rate)/3
-            water -= int(time_since_last_water * water_decay_rate)/2
+            # update food and water levels (food decays 1 every second, water decays 2 every second)
+            food -= food_decay_rate # TODO CHANGE TO PLANT NUMBER
+            water -= water_decay_rate # TODO CHANGE TO PLANT NUMBER
 
+            # water and food cannot go below zero
+            if water < 0: water = 0 # TODO CHANGE TO PLANT NUMBER
+            if food < 0: food = 0 # TODO CHANGE TO PLANT NUMBER
+
+            food = round(food, 1) # TODO CHANGE TO PLANT NUMBER
+            water = round(water, 1) # TODO CHANGE TO PLANT NUMBER
             # testing print statements
             print(f"\n\nFOOD LEVEL | {food}")
             print(f"WATER LEVEL | {water}")

@@ -66,20 +66,20 @@
             "client_id": "00000000",
             "username": "dev",
             "user_data": {
-                "balance": 2490,
+                "balance": 4590,
                 "plants": [
                     {
                         "nickname": "Name me!",
-                        "realname": "",
-                        "sciname": "Aloe vera",
+                        "realname": "Blue Myrtle Cactus",
+                        "sciname": "Myrtillocactus geometrizans",
                         "picture_path": "",
                         "birthday": 1698890452.0,
-                        "water": 87.30008981009598,
-                        "water_decay_rate": 1e-09,
-                        "last_water": 1699910104.5705054,
-                        "food": 91.30008981009608,
-                        "food_decay_rate": 1e-09,
-                        "last_feed": 1699910104.6538985,
+                        "water": 81.0,
+                        "water_decay_rate": 2,
+                        "last_water": 1699983861.1291397,
+                        "food": 90.0,
+                        "food_decay_rate": 1,
+                        "last_feed": 1699983861.247143,
                         "xp": 0,
                         "money_rate": 10
                     }
