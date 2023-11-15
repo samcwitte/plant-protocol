@@ -42,6 +42,79 @@ def prevPlant():
     plant_image = pygame.image.load(os.path.join('assets', 'sprites', user_plants[currentPlantIndex]['sciname'].lower().replace(' ', '-'), levelString)).convert_alpha()
     plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
 
+def getWaterDecayRate():
+    global user_plants, currentPlantIndex
+    return user_plants[currentPlantIndex]["water_decay_rate"]
+
+def getFoodDecayRate():
+    global user_plants, currentPlantIndex
+    return user_plants[currentPlantIndex]["food_decay_rate"]
+
+def getLastWater():
+    global user_plants, currentPlantIndex
+    return user_plants[currentPlantIndex]["last_water"]
+
+def getLastFeed():
+    global user_plants, currentPlantIndex
+    return user_plants[currentPlantIndex]["last_feed"]
+
+def getWaterLevel():
+    global user_plants, currentPlantIndex, water_level
+    water = round(user_plants[currentPlantIndex]["water"] - ((time.time() - getLastWater()) * (getWaterDecayRate()/100)), 0)
+    if water < 0: water = 0
+    water_level = water
+    return water
+
+def getFoodLevel():
+    global user_plants, currentPlantIndex, food_level
+    food = round(user_plants[currentPlantIndex]["food"] - ((time.time() - getLastFeed()) * (getFoodDecayRate()/100)), 0)
+    if food < 0: food = 0
+    food_level = food
+    return food
+
+def getMoneyRate():
+    global user_plants, currentPlantIndex
+    return user_plants[currentPlantIndex]["money_rate"]
+
+def decreaseWaterLevel():
+    global user_plants, currentPlantIndex, water_level
+    water_level -= user_plants[currentPlantIndex]["water_decay_rate"]
+    if water_level < 0: water_level = 0
+    water_level = round(water_level, 1)
+
+    user_plants[currentPlantIndex]["water"] = water_level
+
+    print(f"\n\nWATER LEVEL | {water_level}")
+
+def decreaseFoodLevel():
+    global user_plants, currentPlantIndex, food_level
+    food_level -= user_plants[currentPlantIndex]["food_decay_rate"]
+    if food_level < 0: food_level = 0
+    food_level = round(food_level, 1)
+
+    user_plants[currentPlantIndex]["food"] = food_level
+
+    print(f"FOOD LEVEL | {food_level}")           
+            
+def increaseWaterLevel():
+    global water_level, last_water
+    water_level += 10
+    if water_level > 100: water_level = 100 
+    last_water = time.time()
+
+    user_plants[currentPlantIndex]["water"] = water_level
+    user_plants[currentPlantIndex]["last_water"] = last_water
+
+def increaseFoodLevel():
+    global food_level, last_feed
+    food_level += 5
+    if food_level > 100: food_level = 100
+    last_feed = time.time()
+
+    user_plants[currentPlantIndex]["food"] = food_level
+    user_plants[currentPlantIndex]["last_feed"] = last_feed
+
+
 os.system("cls")
 
 #IP Handling
@@ -264,26 +337,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     user_balance = int(gamedata['balance'])
     active_plant_index = 0
     balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
+    
+    # god of the game
+    currentPlantIndex = 0
 
     # water and food decay
-    water_decay_rate = gamedata['plants'][0]["water_decay_rate"]
-    food_decay_rate = gamedata['plants'][0]["food_decay_rate"]
-
-    # time of last water and feed
-    last_water = gamedata['plants'][0]["last_water"]
-    last_feed = gamedata['plants'][0]["last_feed"]
+    water_decay_rate = getWaterDecayRate()
+    food_decay_rate = getFoodDecayRate()
 
     # current water and food levels (percentage 0%-100%)
-    water = []
-    food = []
-    for i in range(len(gamedata['plants'])):
-        water[i] = round(gamedata['plants'][i]["water"] - ((time.time() - last_water) * (water_decay_rate/100)), 0)
-        food[i] = round(gamedata['plants'][i]["food"] - ((time.time() - last_feed) * (food_decay_rate/100)), 0)
-
-    if water < 0: water = 0
-    if food < 0: food = 0
-    
-    currentPlantIndex = 0
+    water_level = getWaterLevel()
+    food_level = getFoodLevel()
 
     # Main game loop
     while running:
@@ -293,12 +357,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 gamedata['balance'] = user_balance
 
                 # plant info dump
-                user_plants[0]["food"] = food
-                user_plants[0]["water"] = water
-                
-                user_plants[0]["last_feed"] = last_feed
-                user_plants[0]["last_water"] = last_water
-
                 gamedata['plants'] = user_plants
                                 
                 while True:
@@ -355,18 +413,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         prevPlant()
 
                     case pygame.K_w:
-                        # change the last water time
-                        last_water = time.time()
                         # add to the water level, cannot go above 100
-                        water[0] += 10 # TODO CHANGE TO PLANT NUMBER
-                        if water > 100: water = 100
+                        increaseWaterLevel()
 
                     case pygame.K_f:
-                        # change the last feed time
-                        last_feed = time.time()
                         # add to the food level, cannot go above 100
-                        food[0] += 5 # TODO CHANGE TO PLANT NUMBER
-                        if food[0] > 100: food[0] = 100  
+                        increaseFoodLevel()
 
                 #new_plant_image_path = os.path.join('assets', 'dracaena-sanderiana', 'stage' + str(stage_num) + '.png')
                 #new_plant_image_path = os.path.join('assets', 'sprites', gamedata['plants'][active_plant_index]['picture_path'], 'stage' + str(stage_num) + '.png')
@@ -400,7 +452,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     print("> Right click!")
         
         dt = clock.tick(60)
-        money_rate = int(gamedata['plants'][0]['money_rate']) # TODO CHANGE TO PLANT NUMBER
+        money_rate = getMoneyRate()
         # money_rate = sum of all plants' money rates
         
         balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
@@ -411,19 +463,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             # update user balance
             user_balance += money_rate # TODO CHANGE ME
 
-            # update food and water levels (food decays 1 every second, water decays 2 every second)
-            food -= food_decay_rate # TODO CHANGE TO PLANT NUMBER
-            water -= water_decay_rate # TODO CHANGE TO PLANT NUMBER
-
-            # water and food cannot go below zero
-            if water < 0: water = 0 # TODO CHANGE TO PLANT NUMBER
-            if food < 0: food = 0 # TODO CHANGE TO PLANT NUMBER
-
-            food = round(food, 1) # TODO CHANGE TO PLANT NUMBER
-            water = round(water, 1) # TODO CHANGE TO PLANT NUMBER
-            # testing print statements
-            print(f"\n\nFOOD LEVEL | {food}")
-            print(f"WATER LEVEL | {water}")
+            decreaseWaterLevel()
+            decreaseFoodLevel()
 
             # reset elapsed time
             time_elapsed = 0
