@@ -23,7 +23,7 @@ def getPlantLevel():
     return max(1, min(plantLevel, 5)) # clamps the level between 1 and 5 (incl.)
 
 def nextPlant():
-    global user_plants, currentPlantIndex, plant_image
+    global user_plants, currentPlantIndex, plant_image, water_level, food_level
     if currentPlantIndex == len(user_plants) - 1: # max index
         currentPlantIndex = 0
     else:
@@ -32,8 +32,11 @@ def nextPlant():
     plant_image = pygame.image.load(os.path.join('assets', 'sprites', user_plants[currentPlantIndex]['sciname'].lower().replace(' ', '-'), levelString)).convert_alpha()
     plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
 
+    water_level = getWaterLevel()
+    food_level = getFoodLevel()
+
 def prevPlant():
-    global user_plants, currentPlantIndex, plant_image
+    global user_plants, currentPlantIndex, plant_image, water_level, food_level
     if currentPlantIndex == 0: # min index
         currentPlantIndex = len(user_plants) - 1
     else:
@@ -41,6 +44,9 @@ def prevPlant():
     levelString = 'stage' + str(getPlantLevel()) + '.png'
     plant_image = pygame.image.load(os.path.join('assets', 'sprites', user_plants[currentPlantIndex]['sciname'].lower().replace(' ', '-'), levelString)).convert_alpha()
     plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
+
+    water_level = getWaterLevel()
+    food_level = getFoodLevel()
 
 def getWaterDecayRate():
     global user_plants, currentPlantIndex
@@ -257,13 +263,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     pygame.display.set_icon(pygame.image.load(os.path.join('assets', 'sprites', 'water-icon.png')))
 
     # Set up colors
-    button_color = (0, 148, 255)
+    water_button_color = (0, 148, 255)
 
     # Set up button properties
-    button_width, button_height = 75, 25
-    button_x, button_y = (5) , (500)
+    button_width, button_height = 60, 25
+    water_button_x, water_button_y = (15) , (500)
 
+    food_button_color = (255,255,0)
+    food_button_x, food_button_y = (230) , (500)
 
+    color = (0,0,0)
     clock = pygame.time.Clock()
     running = True
 
@@ -345,6 +354,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         settings_image = pygame.transform.scale(settings_image, (settings_image.get_width() * SCALE_FACTOR / 2.5, settings_image.get_height() * SCALE_FACTOR / 2.5))
         settings_rect = settings_image.get_rect()
         settings_rect.center = (SCREEN_WIDTH - sunshine_rect.left // 2, top_banner_rect.centery)
+
+        water_button_text = long_text_font.render('Water' , True , color)
+        food_button_text = long_text_font.render('Feed', True, color)
 
     # TODO CHANGE ME TO UPDATE FROM SERVER'S VALUE
     time_elapsed = 0
@@ -507,9 +519,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         screen.blit(arrow_next_image, arrow_next_rect)
         screen.blit(arrow_prev_image, arrow_prev_rect)
 
+        
 
-        pygame.draw.rect(screen, button_color, (button_x, button_y, button_width, button_height))
 
+        pygame.draw.rect(screen, water_button_color, (water_button_x, water_button_y, button_width, button_height))
+        pygame.draw.rect(screen, food_button_color, (food_button_x, food_button_y, button_width, button_height))
+        screen.blit(water_button_text , (30,503))
+        screen.blit(food_button_text , (245,503))
         # flip() the display to put your work on screen
         pygame.display.flip()
 
