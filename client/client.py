@@ -14,8 +14,7 @@ PORT = 65432 # This needs to match the server's port.
 
 def getNewPlant():
     global plants
-    newPlant = plants[random.randint(0, len(plants)-1)]
-    
+    newPlant = plants[random.randint(0,len(plants) - 1)]
     return newPlant
 
 def getPlantLevel():
@@ -256,6 +255,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Plant Protocol")
     pygame.display.set_icon(pygame.image.load(os.path.join('assets', 'sprites', 'water-icon.png')))
+
+    # Set up colors
+    button_color = (0, 148, 255)
+
+    # Set up button properties
+    button_width, button_height = 75, 25
+    button_x, button_y = (5) , (500)
+
+
     clock = pygame.time.Clock()
     running = True
 
@@ -473,6 +481,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             # reset elapsed time
             time_elapsed = 0
 
+        color = (255,255,0)
+        pygame.draw.rect(screen, color, pygame.Rect(30, 30, 60, 60))
         # fill the screen with a color to wipe away anything from last frame
         # draws from back to front
         screen.fill(pygame.color.Color(132, 197, 255, 255))
@@ -496,6 +506,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Next/Prev plant arrows
         screen.blit(arrow_next_image, arrow_next_rect)
         screen.blit(arrow_prev_image, arrow_prev_rect)
+
+
+        pygame.draw.rect(screen, button_color, (button_x, button_y, button_width, button_height))
 
         # flip() the display to put your work on screen
         pygame.display.flip()
