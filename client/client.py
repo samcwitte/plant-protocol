@@ -20,8 +20,9 @@ def getNewPlant():
 
 def getPlantLevel():
     global user_plants, currentPlantIndex
-    plantLevel = (int(user_plants[currentPlantIndex]['xp']) // 10) + 1 # can't be level 0
-    return max(1, min(plantLevel, 5)) # clamps the level between 1 and 5 (incl.)
+    plantLevel = max(1, min(((int(user_plants[currentPlantIndex]['xp']) // 10) + 1), 5)) # can't be level 0
+    user_plants[currentPlantIndex]['money_rate'] = 2 * plantLevel
+    return plantLevel # clamps the level between 1 and 5 (incl.)
 
 def nextPlant():
     global user_plants, currentPlantIndex, plant_image, water_level, food_level
@@ -492,7 +493,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         if (time_elapsed >= 1000):
 
             # update user balance
-            user_balance += money_rate # TODO CHANGE ME
+            money_rate = 0
+            for plant in user_plants:
+                money_rate += plant['money_rate']
+            user_balance += money_rate
 
             decreaseWaterLevel()
             decreaseFoodLevel()
