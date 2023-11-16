@@ -425,18 +425,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if event.type == pygame.KEYDOWN:
                 match event.key:
 
+                    # TODO: MAKE THIS INTO ITS OWN BUTTON (?)
                     case pygame.K_p:
                         if (user_balance >= 500):
                             user_balance -= 500
                             user_plants.append(getNewPlant())
-
-                    case pygame.K_w:
-                        # add to the water level, cannot go above 100
-                        increaseWaterLevel()
-
-                    case pygame.K_f:
-                        # add to the food level, cannot go above 100
-                        increaseFoodLevel()
 
                 #new_plant_image_path = os.path.join('assets', 'dracaena-sanderiana', 'stage' + str(stage_num) + '.png')
                 #new_plant_image_path = os.path.join('assets', 'sprites', gamedata['plants'][active_plant_index]['picture_path'], 'stage' + str(stage_num) + '.png')
@@ -476,6 +469,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     nickname_rect.centery = 0.92*SCREEN_HEIGHT - 20 + (nickname_rect.height//2)
                     if nickname_rect.collidepoint(mouse_pos):
                         user_plants[currentPlantIndex]['nickname'] = easygui.enterbox("New plant name: ")
+                        
+                    if water_button_rect.collidepoint(mouse_pos):
+                        increaseWaterLevel()
+                        
+                    if food_button_rect.collidepoint(mouse_pos):
+                        increaseFoodLevel()                    
                     
                 if event.button == 3:
                     print("> Right click!")
@@ -530,9 +529,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         screen.blit(sciname_surface, (center_x - sciname_font.size(str(user_plants[currentPlantIndex]['sciname']))[0]//2, 0.92*SCREEN_HEIGHT + 20))
         screen.blit(realname_surface, (center_x - realname_font.size(str(user_plants[currentPlantIndex]['realname']))[0]//2, 0.92*SCREEN_HEIGHT))
         screen.blit(nickname_surface, (center_x - nickname_font.size(str(user_plants[currentPlantIndex]['nickname']))[0]//2, 0.92*SCREEN_HEIGHT - 20))
-
-        pygame.draw.rect(screen, water_button_color, (water_button_x, water_button_y, button_width, button_height))
-        pygame.draw.rect(screen, food_button_color, (food_button_x, food_button_y, button_width, button_height))
+        
+        water_button_rect = pygame.draw.rect(screen, water_button_color, (water_button_x, water_button_y, button_width, button_height))
+        food_button_rect = pygame.draw.rect(screen, food_button_color, (food_button_x, food_button_y, button_width, button_height))
         
         screen.blit(water_button_text , (30,503))
         screen.blit(food_button_text , (245,503))
