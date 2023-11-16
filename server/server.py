@@ -19,6 +19,9 @@ sys.path.append(root_folder)
 from lib import packets
 from lib import database
 
+HOST = "0.0.0.0"
+PORT = 65432 # Most ports 1023 - 65535 should work.
+
 db = database.Database()
 
 def handle_client(conn, addr):
