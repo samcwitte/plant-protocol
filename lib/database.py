@@ -9,7 +9,7 @@ class Database:
     # get full plant list (used for the store)  
     def getUsers(self):
         # load in the database
-         with open(self.database_file, 'r') as file:
+        with open(self.database_file, 'r') as file:
             database = json.load(file)
 
             return database["users"]
@@ -17,29 +17,17 @@ class Database:
     # get full plant list (used for the store)
     def getPlants(self):
         # load in the database
-         with open(self.database_file, 'r') as file:
+        with open(self.database_file, 'r') as file:
             database = json.load(file)
 
             return database["plants"]
-
-    # return client id
-    # only getter with input username (the initial get function that returns client id)
-    def getClientId(self, username):
-        # load in the database
-        with open(self.database_file, 'r') as file:
-            data = json.load(file)
-
-        for user in data['users']:
-            if user['username'] == username:
-                return user['client_id']
-
-        return None
 
     # return user data... used in other getters
     def getUserData(self, username):
         # load in the database
         with open(self.database_file, 'r') as file:
             data = json.load(file)
+        file.close()
 
         for user in data['users']:
             if user['username'] == username:
@@ -69,3 +57,36 @@ class Database:
                 return plant
         return None # aint got that plant 
     
+    def createNewUser(self, username):
+        with open(self.database_file) as file:
+            data = json.load(file)
+        file.close()
+        
+        stuff = {
+            "username": username,
+            "user_data": {
+                "balance": 10,
+                "plants": [
+                    {
+                        "nickname": "Name me!",
+                        "realname": "Aloe vera",
+                        "sciname": "Aloe vera",
+                        "birthday": 1698890452.0,
+                        "water": 84,
+                        "water_decay_rate": 2,
+                        "last_water": 1700098006.4412186,
+                        "food": 46.0,
+                        "food_decay_rate": 1,
+                        "last_feed": 1700097960.1149216,
+                        "xp": "65",
+                        "money_rate": 10
+                    }
+                ]
+            }
+        }
+        
+        data['users'].append(stuff)
+        
+        with open('database/database.json', 'w') as f:
+            json.dump(data, f)
+        f.close()

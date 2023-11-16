@@ -14,7 +14,8 @@ PORT = 65432 # This needs to match the server's port.
 
 def getNewPlant():
     global plants
-    newPlant = plants[random.randint(0,len(plants))]
+    newPlant = plants[random.randint(0, len(plants)-1)]
+    
     return newPlant
 
 def getPlantLevel():
@@ -79,6 +80,7 @@ def getMoneyRate():
 def decreaseWaterLevel():
     global user_plants, currentPlantIndex, water_level
     water_level -= user_plants[currentPlantIndex]["water_decay_rate"]
+    # user_plants[currentPlantIndex]['water'] -= user_plants[currentPlantIndex]["water_decay_rate"]
     if water_level < 0: water_level = 0
     water_level = round(water_level, 1)
 
@@ -260,6 +262,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     SCALE_FACTOR = 4
     
     user_plants = gamedata['plants']
+    
+    # god of the game
+    currentPlantIndex = 0
 
     # NOTE: ALL PLANT SPRITES SHOULD BE 32x32 AND A .PNG FILE
     if True: # This does nothing. This is so I can minimize the sprites section of code.
@@ -274,7 +279,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         pot_shadow_rect = pot_shadow_image.get_rect()
         pot_shadow_rect.center = (pot_rect.centerx + (13 * SCALE_FACTOR), pot_rect.bottom + (1 * SCALE_FACTOR))
 
-        plant_image = pygame.image.load(os.path.join('assets', 'sprites', user_plants[0]['sciname'].lower().replace(' ', '-'), 'stage1.png')).convert_alpha()
+        levelString = 'stage' + str(getPlantLevel()) + '.png'
+        plant_image = pygame.image.load(os.path.join('assets', 'sprites', user_plants[0]['sciname'].lower().replace(' ', '-'), levelString)).convert_alpha()
         plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
         plant_rect = plant_image.get_rect()
         plant_rect.center = (center_x, center_y)
@@ -337,9 +343,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     user_balance = int(gamedata['balance'])
     active_plant_index = 0
     balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
-    
-    # god of the game
-    currentPlantIndex = 0
 
     # water and food decay
     water_decay_rate = getWaterDecayRate()
@@ -404,13 +407,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     #    stage_num = 5 
 
                     case pygame.K_p:
-                        user_plants.append(getNewPlant())
-                        print("\nUser Plants: " + str(user_plants))
-                        
-                    case pygame.K_x:
-                        user_plants[currentPlantIndex]['xp'] = str(int(user_plants[currentPlantIndex]['xp']) + 5)
-                        nextPlant()
-                        prevPlant()
+                        if (user_balance >= 500):
+                            user_balance -= 500
+                            user_plants.append(getNewPlant())
 
                     case pygame.K_w:
                         # add to the water level, cannot go above 100
@@ -433,20 +432,25 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     mouse_pos = event.pos
                     # Check if mouse position is over the sprite
                     if arrow_next_rect.collidepoint(mouse_pos):
-                        print("> Next arrow left-clicked!")
+                        # print("> Next arrow left-clicked!")
                         nextPlant()
                         
                     if arrow_prev_rect.collidepoint(mouse_pos):
-                        print("> Prev arrow left-clicked!")
+                        # print("> Prev arrow left-clicked!")
                         prevPlant()
                         
                     if shop_rect.collidepoint(mouse_pos):
-                        print("> Shop left-clicked!")
+                        print("> Shop is coming soon!")
                         # TODO IMPLEMENT SHOP
+                        
                     if settings_rect.collidepoint(mouse_pos):
-                        print("> Settings left-clicked!")
+                        print("> Settings are coming soon!")
                         # TODO IMPLEMENT SETTINGS PANEL
-                    print(gamedata['plants'][0]['sciname']) # test
+                    
+                    if plant_rect.collidepoint(mouse_pos):
+                        user_plants[currentPlantIndex]['xp'] = str(int(user_plants[currentPlantIndex]['xp']) + 2)
+                        nextPlant()
+                        prevPlant()
                     
                 if event.button == 3:
                     print("> Right click!")

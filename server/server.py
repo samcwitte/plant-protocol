@@ -8,6 +8,7 @@
 # DONE: last message before disconnect
 
 import socket
+import threading
 import os, sys
 import time
 
@@ -18,26 +19,10 @@ sys.path.append(root_folder)
 from lib import packets
 from lib import database
 
-HOST = "127.0.0.1"
-PORT = 65432 # Most ports 1023 - 65535 should work.
-
 db = database.Database()
 
-# packet for initial connection
-
-os.system("cls") # clears the console
-# Create a new socket using IPv4 (AF_INET) and TCP protocol (SOCK_STREAM).
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:    
-    # Bind the socket to the specified HOST and PORT.
-    server.bind((HOST, PORT))
-    print("Server has been bound.")
-    # Enable the server to accept connections. By default, it does not limit the number of queued connections.
-    server.listen()
-    print("Server is listening.\n")
-    # Wait until a client connects, then return a new socket (conn) and the client's address.
-    
-    conn, addr = server.accept()
-    print("Server is accepting.")
+def handle_client(conn, addr):
+    print(f"Connected to {addr}")
     with conn:
         while True:
             try:
@@ -55,6 +40,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
                         if (decoded_packet[4] == "USER"):
                             print("RECV | REQD | Sending data...")
                             username = decoded_packet[3].replace("\x00", "")
+                            if not db.getUserData(username):
+                                # Create new user profile
+                                db.createNewUser(username)
+                            
                             data_packet = packets.Packet("DATA", "SERVER", json.dumps(db.getUserData(username)))
                             conn.sendall(packets.Packet.toBytes(data_packet))
                             print("SEND | DATA | " + str(data_packet))
@@ -78,6 +67,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
                         
                         with open('database/database.json') as f:
                             jsondata = json.load(f)
+                        f.close()
                         
                         print("\n" + decoded_packet[4])
                         print(type(decoded_packet[4]))
@@ -107,3 +97,19 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
                 pass
             finally:
                 pass
+
+def start_server(HOST, PORT):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+        server.bind((HOST, PORT))
+        server.listen()
+        print("Server is listening on", HOST, PORT)
+        while True:
+            conn, addr = server.accept()
+            thread = threading.Thread(target=handle_client, args=(conn, addr))
+            thread.start()
+            print(f"Active connections: {threading.active_count() - 1}")
+
+HOST = "0.0.0.0"
+PORT = 65432 # Most ports 1023 - 65535 should work.
+os.system("cls") # clears the console
+start_server(HOST, PORT)

@@ -59,21 +59,20 @@
     ],
     "users": [
         {
-            "client_id": "00000000",
             "username": "dev",
             "user_data": {
-                "balance": 3140,
+                "balance": 10,
                 "plants": [
                     {
                         "nickname": "Name me!",
-                        "realname": "",
+                        "realname": "Aloe vera",
                         "sciname": "Aloe vera",
                         "birthday": 1698890452.0,
-                        "water": 63.50008404398851,
-                        "water_decay_rate": 1e-09,
+                        "water": 97,
+                        "water_decay_rate": 2,
                         "last_water": 73568.45399999619,
-                        "food": 73.16675071073881,
-                        "food_decay_rate": 1e-09,
+                        "food": 73,
+                        "food_decay_rate": 1,
                         "last_feed": 73568.37060689926,
                         "xp": 0,
                         "money_rate": 10
