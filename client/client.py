@@ -1,6 +1,7 @@
 import socket
 import os, sys
 import pygame
+import easygui
 import time
 import json
 import random
@@ -242,10 +243,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     ##################################### Pygame setup #####################################
     pygame.init()
     pygame.font.init()
-    ui_font = pygame.font.Font(os.path.join('assets', 'fonts', 'Minecraftia-Regular.ttf'), 30) # use for UI elements such as money, etc.
+    ui_font = pygame.font.Font(os.path.join('assets', 'fonts', 'Minecraftia-Regular.ttf'), 28) # use for UI elements such as money, etc.
+    sciname_font = pygame.font.Font(os.path.join('assets', 'fonts', 'Minecraftia-Regular.ttf'), 14)
+    realname_font = pygame.font.Font(os.path.join('assets', 'fonts', 'Minecraftia-Regular.ttf'), 18)
+    nickname_font = pygame.font.Font(os.path.join('assets', 'fonts', 'Minecraftia-Regular.ttf'), 20)
     long_text_font = pygame.font.SysFont('Helvetica', 16) # use for long text descriptions
+    
     ui_text_color = (0, 0, 0)
+    sciname_color = (0, 0, 0)
+    realname_color = (30, 30, 30)
     long_text_color = (255, 255, 127)
+    nickname_color = (0, 0, 0)
 
     SCREEN_WIDTH = 300
     SCREEN_HEIGHT = 600
@@ -338,11 +346,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         settings_rect = settings_image.get_rect()
         settings_rect.center = (SCREEN_WIDTH - sunshine_rect.left // 2, top_banner_rect.centery)
 
-    # TODO CHANGE ME TO UPDATE FROM SERVER'S VALUE
     time_elapsed = 0
     user_balance = int(gamedata['balance'])
     active_plant_index = 0
+    
+    # Font surface setup
     balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
+    realname_surface = realname_font.render(str(user_plants[currentPlantIndex]['realname']), False, realname_color)
+    sciname_surface = sciname_font.render(str(user_plants[currentPlantIndex]['sciname']), False, sciname_color)
+    nickname_surface = nickname_font.render(str(user_plants[currentPlantIndex]['nickname']), False, nickname_color)
 
     # water and food decay
     water_decay_rate = getWaterDecayRate()
@@ -391,20 +403,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             if event.type == pygame.KEYDOWN:
                 match event.key:
-                    #case pygame.K_1:
-                        #stage_num = 1
-
-                    #case pygame.K_2:
-                        #stage_num = 2 
-
-                    #case pygame.K_3:
-                    #    stage_num = 3
-
-                    #case pygame.K_4:
-                    #    stage_num = 4
-
-                    #case pygame.K_5:
-                    #    stage_num = 5 
 
                     case pygame.K_p:
                         if (user_balance >= 500):
@@ -451,6 +449,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         user_plants[currentPlantIndex]['xp'] = str(int(user_plants[currentPlantIndex]['xp']) + 2)
                         nextPlant()
                         prevPlant()
+                        
+                    nickname_rect = nickname_surface.get_rect()
+                    nickname_rect.centerx = center_x
+                    nickname_rect.centery = 0.92*SCREEN_HEIGHT - 20 + (nickname_rect.height//2)
+                    if nickname_rect.collidepoint(mouse_pos):
+                        user_plants[currentPlantIndex]['nickname'] = easygui.enterbox("New plant name: ")
                     
                 if event.button == 3:
                     print("> Right click!")
@@ -460,6 +464,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # money_rate = sum of all plants' money rates
         
         balance_surface = ui_font.render(str(user_balance), False, ui_text_color)
+        realname_surface = realname_font.render(str(user_plants[currentPlantIndex]['realname']), False, realname_color)
+        sciname_surface = sciname_font.render(str(user_plants[currentPlantIndex]['sciname']), False, sciname_color)
+        nickname_surface = nickname_font.render(str(user_plants[currentPlantIndex]['nickname']), False, nickname_color)
         
         # Plant money update logic here
         if (time_elapsed >= 1000):
@@ -496,6 +503,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Next/Prev plant arrows
         screen.blit(arrow_next_image, arrow_next_rect)
         screen.blit(arrow_prev_image, arrow_prev_rect)
+        
+        # Plant text
+        screen.blit(sciname_surface, (center_x - sciname_font.size(str(user_plants[currentPlantIndex]['sciname']))[0]//2, 0.92*SCREEN_HEIGHT + 20))
+        screen.blit(realname_surface, (center_x - realname_font.size(str(user_plants[currentPlantIndex]['realname']))[0]//2, 0.92*SCREEN_HEIGHT))
+        screen.blit(nickname_surface, (center_x - nickname_font.size(str(user_plants[currentPlantIndex]['nickname']))[0]//2, 0.92*SCREEN_HEIGHT - 20))
 
         # flip() the display to put your work on screen
         pygame.display.flip()
