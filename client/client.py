@@ -25,7 +25,7 @@ def getPlantLevel():
     return plantLevel # clamps the level between 1 and 5 (incl.)
 
 def nextPlant():
-    global user_plants, currentPlantIndex, plant_image, water_level, food_level
+    global user_plants, currentPlantIndex, plant_image, water_level, food_level, water_level_bar, food_level_bar
     if currentPlantIndex == len(user_plants) - 1: # max index
         currentPlantIndex = 0
     else:
@@ -36,9 +36,13 @@ def nextPlant():
 
     water_level = getWaterLevel()
     food_level = getFoodLevel()
+    water_level_bar.hp = water_level
+    food_level_bar.hp = food_level
+
+
 
 def prevPlant():
-    global user_plants, currentPlantIndex, plant_image, water_level, food_level
+    global user_plants, currentPlantIndex, plant_image, water_level, food_level, water_level_bar, food_level_bar
     if currentPlantIndex == 0: # min index
         currentPlantIndex = len(user_plants) - 1
     else:
@@ -49,6 +53,9 @@ def prevPlant():
 
     water_level = getWaterLevel()
     food_level = getFoodLevel()
+
+    water_level_bar.hp = water_level
+    food_level_bar.hp = food_level
 
 def getWaterDecayRate():
     global user_plants, currentPlantIndex
@@ -93,17 +100,13 @@ def decreaseWaterLevel():
 
     user_plants[currentPlantIndex]["water"] = water_level
 
-    print(f"\n\nWATER LEVEL | {water_level}")
-
 def decreaseFoodLevel():
     global user_plants, currentPlantIndex, food_level
     food_level -= user_plants[currentPlantIndex]["food_decay_rate"]
     if food_level < 0: food_level = 0
     food_level = round(food_level, 1)
 
-    user_plants[currentPlantIndex]["food"] = food_level
-
-    print(f"FOOD LEVEL | {food_level}")           
+    user_plants[currentPlantIndex]["food"] = food_level         
             
 def increaseWaterLevel():
     global water_level, last_water
@@ -123,6 +126,23 @@ def increaseFoodLevel():
     user_plants[currentPlantIndex]["food"] = food_level
     user_plants[currentPlantIndex]["last_feed"] = last_feed
 
+class HealthBar():
+  def __init__(self, x, y, w, h, max_hp):
+    self.x = x
+    self.y = y
+    self.w = w
+    self.h = h
+    self.hp = max_hp
+    self.max_hp = max_hp
+
+  def draw(self, surface):
+    #calculate health ratio
+    ratio = self.hp / self.max_hp
+    pygame.draw.rect(surface, "red", (self.x, self.y, self.w, self.h))
+    pygame.draw.rect(surface, "green", (self.x, self.y, self.w * ratio, self.h))
+
+water_level_bar = HealthBar(35, 100, 140, 10, 100)
+food_level_bar = HealthBar(35, 130, 140, 10, 100)
 
 os.system("cls")
 
@@ -271,16 +291,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     pygame.display.set_caption("Plant Protocol")
     pygame.display.set_icon(pygame.image.load(os.path.join('assets', 'sprites', 'water-icon.png')))
 
-    # Set up colors
-    water_button_color = (0, 148, 255)
-
-    # Set up button properties
-    button_width, button_height = 60, 25
-    water_button_x, water_button_y = (15) , (500)
-
-    food_button_color = (255,255,0)
-    food_button_x, food_button_y = (230) , (500)
-
     color = (0,0,0)
     clock = pygame.time.Clock()
     running = True
@@ -364,7 +374,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         settings_rect = settings_image.get_rect()
         settings_rect.center = (SCREEN_WIDTH - sunshine_rect.left // 2, top_banner_rect.centery)
 
-        water_button_text = long_text_font.render('Water' , True , color)
+        water_button_image = pygame.image.load(os.path.join('assets', 'sprites', 'water-button.jpg')).convert_alpha()
+        water_button_image = pygame.transform.scale(water_button_image, (water_button_image.get_width() * SCALE_FACTOR / 2.5, water_button_image.get_height() * SCALE_FACTOR / 2.5))
+        water_button_rect = water_button_image.get_rect()
+        water_button_rect.center = (SCREEN_WIDTH - 250, 500)
+
+        feed_button_image = pygame.image.load(os.path.join('assets', 'sprites', 'feed-button.jpg')).convert_alpha()
+        feed_button_image = pygame.transform.scale(feed_button_image, (feed_button_image.get_width() * SCALE_FACTOR / 2.5, feed_button_image.get_height() * SCALE_FACTOR / 2.5))
+        feed_button_rect = feed_button_image.get_rect()
+        feed_button_rect.center = (SCREEN_WIDTH - 50, 500)
+
+        new_plant_button_image = pygame.image.load(os.path.join('assets', 'sprites', 'new-plant-button.jpg')).convert_alpha()
+        new_plant_button_image = pygame.transform.scale(new_plant_button_image, (new_plant_button_image.get_width() * SCALE_FACTOR / 2.5, new_plant_button_image.get_height() * SCALE_FACTOR / 2.5))
+        new_plant_rect = new_plant_button_image.get_rect()
+        new_plant_rect.center = (SCREEN_WIDTH - 60, 105)
+
         food_button_text = long_text_font.render('Feed', True, color)
 
     # TODO CHANGE ME TO UPDATE FROM SERVER'S VALUE
@@ -431,14 +455,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         if (user_balance >= 500):
                             user_balance -= 500
                             user_plants.append(getNewPlant())
-
-                #new_plant_image_path = os.path.join('assets', 'dracaena-sanderiana', 'stage' + str(stage_num) + '.png')
-                #new_plant_image_path = os.path.join('assets', 'sprites', gamedata['plants'][active_plant_index]['picture_path'], 'stage' + str(stage_num) + '.png')
-                #plant_image = pygame.image.load(new_plant_image_path).convert_alpha()
-                #plant_image = pygame.transform.scale(plant_image, (plant_image.get_width() * SCALE_FACTOR, plant_image.get_height() * SCALE_FACTOR))
-                ## Update the rect to match the new image
-                #plant_rect.center = (center_x, center_y)
-                #plant_rect.bottom = pot_rect.centery - (10 * SCALE_FACTOR)
                 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -464,7 +480,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         user_plants[currentPlantIndex]['xp'] = str(int(user_plants[currentPlantIndex]['xp']) + 2)
                         nextPlant()
                         prevPlant()
-                        
+                    
+                    if new_plant_rect.collidepoint(mouse_pos):
+                        if (user_balance >= 500):
+                            user_balance -= 500
+                            user_plants.append(getNewPlant())
+
                     nickname_rect = nickname_surface.get_rect()
                     nickname_rect.centerx = center_x
                     nickname_rect.centery = 0.92*SCREEN_HEIGHT - 20 + (nickname_rect.height//2)
@@ -473,9 +494,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         
                     if water_button_rect.collidepoint(mouse_pos):
                         increaseWaterLevel()
+                        water_level_bar.hp = water_level
+            
                         
-                    if food_button_rect.collidepoint(mouse_pos):
-                        increaseFoodLevel()                    
+                    if feed_button_rect.collidepoint(mouse_pos):
+                        increaseFoodLevel()  
+                        food_level_bar.hp = food_level                  
                     
                 if event.button == 3:
                     print("> Right click!")
@@ -500,6 +524,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             decreaseWaterLevel()
             decreaseFoodLevel()
+
+            water_level_bar.hp = water_level
+            food_level_bar.hp = food_level
 
             # reset elapsed time
             time_elapsed = 0
@@ -534,11 +561,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         screen.blit(realname_surface, (center_x - realname_font.size(str(user_plants[currentPlantIndex]['realname']))[0]//2, 0.92*SCREEN_HEIGHT))
         screen.blit(nickname_surface, (center_x - nickname_font.size(str(user_plants[currentPlantIndex]['nickname']))[0]//2, 0.92*SCREEN_HEIGHT - 20))
         
-        water_button_rect = pygame.draw.rect(screen, water_button_color, (water_button_x, water_button_y, button_width, button_height))
-        food_button_rect = pygame.draw.rect(screen, food_button_color, (food_button_x, food_button_y, button_width, button_height))
-        
-        screen.blit(water_button_text , (30,503))
-        screen.blit(food_button_text , (245,503))
+        #water_button_rect = pygame.draw.rect(screen, water_button_color, (water_button_x, water_button_y, button_width, button_height))
+        screen.blit(water_button_image, water_button_rect)
+        screen.blit(feed_button_image, feed_button_rect)
+
+        screen.blit(new_plant_button_image, new_plant_rect)
+
+        water_level_bar.draw(screen)
+        food_level_bar.draw(screen)
+
         # flip() the display to put your work on screen
         pygame.display.flip()
 
