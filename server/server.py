@@ -1,10 +1,8 @@
 # Handshake codes:
 # ICON: Initial CONnection
 # REQD: REQuest Data
-# PACK: ACKnowledge received Payload
-
-# Potential, but haven't used in code yet:
-# RACK: ACKnowledge received Request
+# DATA: Data
+# DACK: ACKnowledge received Data
 # DONE: last message before disconnect
 
 import socket
@@ -19,27 +17,28 @@ sys.path.append(root_folder)
 from lib import packets
 from lib import database
 
-HOST = "0.0.0.0"
+HOST = "0.0.0.0" # opens on all network devices on computer
 PORT = 65432 # Most ports 1023 - 65535 should work.
 
 db = database.Database()
 
+# each connection calls this
 def handle_client(conn, addr):
     print(f"Connected to {addr}")
     with conn:
         while True:
             try:
-                # 1) Wait for and receive ICON
+                # Wait for and receive ICON
                 packet = conn.recv(2048)
                 if packet: # makes sure the packet isn't empty
                     # print("Packet: " + str(packet))
                     
-                    # 2, 3) Check that the first packet received is an ICON packet.
+                    # Check that the first packet received is an ICON packet.
                     decoded_packet = packets.Packet.fromBytes(packet)
                     if (decoded_packet[2] == "ICON"):
                         conn.sendall(packet)
                         print("RECV | ICON | Sending copy back...")
-                    elif (decoded_packet[2] == "REQD"):
+                    elif (decoded_packet[2] == "REQD"): # data request packet
                         if (decoded_packet[4] == "USER"):
                             print("RECV | REQD | Sending data...")
                             username = decoded_packet[3].replace("\x00", "")
@@ -57,7 +56,7 @@ def handle_client(conn, addr):
                             conn.sendall(packets.Packet.toBytes(data_packet))
                             print("SEND | DATA | " + str(data_packet))
                         
-                    elif (decoded_packet[2] == "DATA"):
+                    elif (decoded_packet[2] == "DATA"): # packet containing data (to store in database)
                         index = -1
                         print("RECV | DATA | Copying to database...")
                         username = decoded_packet[3].replace("\x00", "")
@@ -80,14 +79,15 @@ def handle_client(conn, addr):
                             json.dump(jsondata, f)
                         f.close()
                         
+                        # send back data acknowledgement packet to client
                         DACK = packets.Packet("DACK", "SERVER", "")
                         conn.sendall(packets.Packet.toBytes(DACK))
                         print("SEND | DACK")
                     
+                    # DONE packet confirmation
                     elif (decoded_packet[2] == "DONE"):
                         print("RECV | DONE | Username: " + str(decoded_packet[3]))
                         
-                        # send RACK packet
                     elif (decoded_packet[2] == "WHAT"):
                         conn.sendall(packets.Packet.toBytes(packets.Packet("", "", ""))) #TODO send previous packet
                         print("RECV | WHAT | Sending previous packet again...")
@@ -102,14 +102,15 @@ def handle_client(conn, addr):
                 pass
 
 def start_server(HOST, PORT):
+    # open a TCP socket 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-        server.bind((HOST, PORT))
-        server.listen()
+        server.bind((HOST, PORT)) # bind to the given host ip and port
+        server.listen() # listen for connections
         print("Server is listening on", HOST, PORT)
         while True:
-            conn, addr = server.accept()
+            conn, addr = server.accept() # accept incoming connections
             thread = threading.Thread(target=handle_client, args=(conn, addr))
-            thread.start()
+            thread.start() # start a thread for each client as to allow multiple connections
             print(f"Active connections: {threading.active_count() - 1}")
 
 HOST = "0.0.0.0"
