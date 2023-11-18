@@ -13,17 +13,20 @@ from lib import packets
 
 PORT = 65432 # This needs to match the server's port.
 
+# call this to return a new plant
 def getNewPlant():
     global plants
     newPlant = plants[random.randint(0,len(plants) - 1)]
     return newPlant
 
+# returns the current plant's level
 def getPlantLevel():
     global user_plants, currentPlantIndex
     plantLevel = max(1, min(((int(user_plants[currentPlantIndex]['xp']) // 10) + 1), 5)) # can't be level 0
     user_plants[currentPlantIndex]['money_rate'] = 2 * plantLevel
     return plantLevel # clamps the level between 1 and 5 (incl.)
 
+# sets the currentPlantIndex to next and updates stats accordingly
 def nextPlant():
     global user_plants, currentPlantIndex, plant_image, water_level, food_level, water_level_bar, food_level_bar
     if currentPlantIndex == len(user_plants) - 1: # max index
@@ -40,7 +43,7 @@ def nextPlant():
     food_level_bar.hp = food_level
 
 
-
+# sets currentPlantIndex to previous index and updates stats accordingly
 def prevPlant():
     global user_plants, currentPlantIndex, plant_image, water_level, food_level, water_level_bar, food_level_bar
     if currentPlantIndex == 0: # min index
@@ -57,22 +60,27 @@ def prevPlant():
     water_level_bar.hp = water_level
     food_level_bar.hp = food_level
 
+# returns the current plant's water decay rate
 def getWaterDecayRate():
     global user_plants, currentPlantIndex
     return user_plants[currentPlantIndex]["water_decay_rate"]
 
+# returns the current plant's food decay rate
 def getFoodDecayRate():
     global user_plants, currentPlantIndex
     return user_plants[currentPlantIndex]["food_decay_rate"]
 
+# returns the time the user last watered the current plant
 def getLastWater():
     global user_plants, currentPlantIndex
     return user_plants[currentPlantIndex]["last_water"]
 
+# returns the time the user last fed the current plant
 def getLastFeed():
     global user_plants, currentPlantIndex
     return user_plants[currentPlantIndex]["last_feed"]
 
+# returns the current water level
 def getWaterLevel():
     global user_plants, currentPlantIndex, water_level
     water = round(user_plants[currentPlantIndex]["water"] - ((time.time() - getLastWater()) * (getWaterDecayRate()/100)), 0)
@@ -80,6 +88,7 @@ def getWaterLevel():
     water_level = water
     return water
 
+# returns the current food level
 def getFoodLevel():
     global user_plants, currentPlantIndex, food_level
     food = round(user_plants[currentPlantIndex]["food"] - ((time.time() - getLastFeed()) * (getFoodDecayRate()/100)), 0)
@@ -87,9 +96,11 @@ def getFoodLevel():
     food_level = food
     return food
 
+# returns the current plant's money rate
 def getMoneyRate():
     global user_plants, currentPlantIndex
     return user_plants[currentPlantIndex]["money_rate"]
+
 
 def decreaseWaterLevel():
     global user_plants, currentPlantIndex, water_level
@@ -144,7 +155,7 @@ class HealthBar():
 water_level_bar = HealthBar(35, 100, 140, 10, 100)
 food_level_bar = HealthBar(35, 130, 140, 10, 100)
 
-os.system("cls")
+os.system("cls") # clear the console
 
 #IP Handling
 print("Input IP to connect to (leave blank for localhost)")
@@ -169,55 +180,54 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Non-blocking mode connection will not be established immediately
         pass
 
-    # 1) Send a byte-string message "ICON" to the server.
+    # Send an "ICON" packet to the server.
     ICON = packets.Packet("ICON", username, "")
     s.sendall(packets.Packet.toBytes(ICON))
     
-    # 2) Wait for "ICON" response from the server and receive up to 1024 bytes of data.
+    # Wait for "ICON" response from the server.
     while True:
         try:
             packet = s.recv(2048)
             if packet:                
-                # 3) Check that the first packet received is an ICON packet.
+                # Check that the first packet received is an ICON packet.
                 decoded_packet = packets.Packet.fromBytes(packet)
                 if (decoded_packet[2] == "ICON"):
                     print("RECV | ICON | Connection is a go.")
                     pass
-                else:
+                else: # if the packet isn't an ICON, send back WHAT
                     what_packet = packets.Packet("WHAT", "", "")
                     s.sendall(packets.Packet.toBytes(what_packet))
                     print("SEND | WHAT")
                 break
             
-        except socket.error as oops:
+        except socket.error as oops: # error handling
             print("ERROR 1: " + oops)
             time.sleep(0.1)
             continue
     
-    # 4) Send data request packet
+    # Send REQuest Data packet to server for user information
     data_request = packets.Packet("REQD", username, "USER")
     s.sendall(packets.Packet.toBytes(data_request))
     print("SEND | REQD")
     
-    # 5) Wait for server response
+    # Wait for server response
     while True:
         try:
             packet = s.recv(2048)
-            if packet:
+            if packet: # if packet is not empty...
                 
                 decoded_packet = packets.Packet.fromBytes(packet)
                 if decoded_packet[2] == "DATA":
                     print("RECV | DATA | " + str(decoded_packet))
                     
                     # Set game variables from received data
-                    gamedata = json.loads(decoded_packet[4]) # might not work
+                    gamedata = json.loads(decoded_packet[4])
                     # print(str(gamedata))
                     
-                    # Constructs Payload ACK packet and sends it
+                    # Constructs Data ACK packet and sends it
                     ack_packet = packets.Packet("DACK", "", "")
                     s.sendall(packets.Packet.toBytes(ack_packet))
                     print("SEND | DACK")
-                    # put JSON fuckery here
                 
                 else:
                     WHAT = packets.Packet("WHAT", "", "")
@@ -230,11 +240,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             time.sleep(0.1)
             continue
         
+    # send REQuest Data packet to server asking for plant data
     plant_data_request = packets.Packet("REQD", username, "PLANTS")
     s.sendall(packets.Packet.toBytes(plant_data_request))
     print("SEND | REQD")
     
-    # 5) Wait for server response
+    # Wait for server response
     while True:
         try:
             packet = s.recv(2048)
@@ -245,14 +256,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     print("RECV | DATA | " + str(decoded_packet))
                     
                     # Set game variables from received data
-                    plants = json.loads(decoded_packet[4]) # might not work
+                    plants = json.loads(decoded_packet[4])
                     # print(str(gamedata))
                     
                     # Constructs Payload ACK packet and sends it
                     ack_packet = packets.Packet("DACK", "", "")
                     s.sendall(packets.Packet.toBytes(ack_packet))
                     print("SEND | DACK")
-                    # put JSON fuckery here
                 
                 else:
                     WHAT = packets.Packet("WHAT", "", "")
