@@ -1,5 +1,6 @@
 # Plant Protocol
-Client-server project for ECE:3540 Communication Networks.
+Client-server project for ECE:3540 Communication Networks in the form of a relaxing plant game!
+User data is saved to a server-side database and retrieved on client login.
 
 ## How to Setup
 1. Download the repository files
